@@ -47,10 +47,11 @@ button {
 
 .game {
   width: min(100%, 392px);
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 24px 10px 78px;
+  padding: 24px 10px 20px;
   border: 8px solid var(--accent);
   border-radius: 24px;
   background: var(--card-surface);
@@ -149,15 +150,23 @@ button {
 
 .bubble-rotate {
   position: absolute;
-  left: 4px;
-  bottom: 0;
+  left: 20px;
+  bottom: 20px;
   transform: rotate(-12deg);
   z-index: 25;
   opacity: 0.6;
+  width: 86px;
+  padding: 12px 10px;
+  font-size: 1rem;
 }
 
 .bubble-rotate:disabled {
   opacity: 0.35;
+}
+
+.rotate-button.is-hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .play-area {
@@ -165,8 +174,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 11px;
-  min-height: 493px;
-  padding-bottom: 86px;
+  min-height: 553px;
 }
 
 .board-area {
@@ -175,7 +183,7 @@ button {
 
 .completion-overlay {
   position: absolute;
-  inset: 0 0 86px;
+  inset: 0;
   z-index: 20;
   display: flex;
   flex-direction: column;
@@ -322,8 +330,8 @@ button {
 }
 
 .piece.is-selected {
-  outline: 4px solid var(--text);
-  outline-offset: 3px;
+  outline: 2px solid rgba(91, 141, 239, 0.55);
+  outline-offset: 2px;
 }
 
 .piece-cell {
@@ -339,14 +347,27 @@ button {
   align-items: flex-start;
   gap: 14px;
   overflow-x: auto;
-  padding: 0 0 0 10px;
+  min-height: 203px;
+  padding: 14px 0 18px 10px;
   margin-inline: -10px;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(95, 95, 95, 0.7) transparent;
+  scrollbar-gutter: stable both-edges;
 }
 
 .tray::-webkit-scrollbar {
-  display: none;
+  height: 10px;
+}
+
+.tray::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tray::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(95, 95, 95, 0.65);
 }
 
 .pieces-container {
@@ -405,7 +426,7 @@ button {
 
   .game {
     width: 100%;
-    padding: 22px 10px 76px;
+    padding: 22px 10px 20px;
     border-width: 7px;
     border-radius: 22px;
   }
@@ -425,13 +446,25 @@ button {
   }
 
   .play-area {
-    min-height: 476px;
-    padding-bottom: 80px;
+    min-height: 520px;
   }
 
   .board-area,
   .board-shell {
     min-height: 222px;
+  }
+
+  .bubble-rotate {
+    left: 20px;
+    bottom: 20px;
+    width: 78px;
+    padding: 10px 8px;
+    font-size: 0.9rem;
+  }
+
+  .tray {
+    min-height: 188px;
+    padding-bottom: 16px;
   }
 
   .completion-badge {
@@ -446,6 +479,10 @@ button {
   .completion-next,
   .completion-done {
     font-size: 0.78rem;
+  }
+
+  .completion-overlay {
+    inset: 0;
   }
 
   .tray-label {

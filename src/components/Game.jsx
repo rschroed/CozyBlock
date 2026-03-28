@@ -424,18 +424,6 @@ function Game() {
             ) : null}
           </div>
 
-          <button
-            className="bubble bubble-rotate rotate-button"
-            disabled={!selectedPieceId || isComplete}
-            onClick={rotateActivePiece}
-            onPointerDown={handleRotateButtonPointerDown}
-            type="button"
-          >
-            Rotate
-            <br />
-            Piece
-          </button>
-
           {isComplete ? (
             <div className="completion-overlay">
               <div className="completion-badge">Yay!</div>
@@ -460,6 +448,18 @@ function Game() {
             </div>
           ) : null}
         </div>
+
+        <button
+          className={`bubble bubble-rotate rotate-button ${isComplete ? 'is-hidden' : ''}`.trim()}
+          disabled={!selectedPieceId || isComplete}
+          onClick={rotateActivePiece}
+          onPointerDown={handleRotateButtonPointerDown}
+          type="button"
+        >
+          Rotate
+          <br />
+          Piece
+        </button>
       </div>
 
       {isLevelPickerOpen ? (
