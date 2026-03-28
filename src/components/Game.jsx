@@ -346,6 +346,7 @@ function Game() {
 
   const hasAnyPlacedPieces = Object.keys(placedPieces).length > 0;
   const hasNextPuzzle = levelIndex < LEVELS.length - 1;
+  const isRotateActive = Boolean(selectedPieceId || dragState?.pieceId) && !isComplete;
 
   const trayPieces = PIECES.filter(
     (piece) => !placedPieces[piece.id] && dragState?.pieceId !== piece.id,
@@ -450,7 +451,7 @@ function Game() {
         </div>
 
         <button
-          className={`bubble bubble-rotate rotate-button ${isComplete ? 'is-hidden' : ''}`.trim()}
+          className={`bubble bubble-rotate rotate-button ${isRotateActive ? 'is-active' : ''} ${isComplete ? 'is-hidden' : ''}`.trim()}
           disabled={!selectedPieceId || isComplete}
           onClick={rotateActivePiece}
           onPointerDown={handleRotateButtonPointerDown}
