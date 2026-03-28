@@ -15,7 +15,7 @@ function Board({
   const columnCount = Math.max(...board.map((row) => row.length));
 
   return (
-    <div className="board-shell">
+    <div className="board-shell game-board">
       <div
         className="board"
         ref={boardRef}

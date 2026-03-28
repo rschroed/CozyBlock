@@ -11,7 +11,8 @@ import Board from './Board';
 import Piece from './Piece';
 
 const DESKTOP_CELL_SIZE = 52;
-const MOBILE_BREAKPOINT = 640;
+const CARD_MAX_WIDTH = 392;
+const BOARD_HORIZONTAL_PADDING = 56;
 
 function createInitialTrayRotations(pieces) {
   return Object.fromEntries(pieces.map((piece) => [piece.id, 0]));
@@ -36,11 +37,12 @@ function Game() {
   const currentLevel = LEVELS[levelIndex];
   const pieceMap = useMemo(() => Object.fromEntries(PIECES.map((piece) => [piece.id, piece])), []);
   const boardColumnCount = Math.max(...currentLevel.board.map((row) => row.length));
-  const isMobileLayout = viewportWidth <= MOBILE_BREAKPOINT;
-  const mobileBoardWidth = viewportWidth - 72;
-  const cellSize = isMobileLayout
-    ? Math.max(34, Math.min(DESKTOP_CELL_SIZE, Math.floor(mobileBoardWidth / boardColumnCount)))
-    : DESKTOP_CELL_SIZE;
+  const availableBoardWidth =
+    Math.min(CARD_MAX_WIDTH, Math.max(320, viewportWidth - 28)) - BOARD_HORIZONTAL_PADDING;
+  const cellSize = Math.max(
+    34,
+    Math.min(DESKTOP_CELL_SIZE, Math.floor(availableBoardWidth / boardColumnCount)),
+  );
 
   useEffect(() => {
     placedPiecesRef.current = placedPieces;
@@ -351,8 +353,8 @@ function Game() {
 
   return (
     <div className="app">
-      <div className="game">
-        <div className="game-header">
+      <div className="game game-card">
+        <div className="game-header header">
           <div className="game-copy">
             <h1>Cozy Block Prototype</h1>
             <button className="puzzle-trigger" onClick={() => setIsLevelPickerOpen(true)} type="button">
@@ -377,18 +379,20 @@ function Game() {
           </div>
         </div>
 
-        <div className="play-area">
-          <Board
-            activeDragPieceId={dragState?.pieceId ?? null}
-            board={currentLevel.board}
-            boardRef={boardRef}
-            cellSize={cellSize}
-            ghostPlacement={dragState?.preview ?? null}
-            onPiecePointerDown={beginDrag}
-            pieces={pieceMap}
-            placedPieces={placedPieces}
-            selectedPieceId={selectedPieceId}
-          />
+        <div className="play-area game-canvas">
+          <div className="board-area">
+            <Board
+              activeDragPieceId={dragState?.pieceId ?? null}
+              board={currentLevel.board}
+              boardRef={boardRef}
+              cellSize={cellSize}
+              ghostPlacement={dragState?.preview ?? null}
+              onPiecePointerDown={beginDrag}
+              pieces={pieceMap}
+              placedPieces={placedPieces}
+              selectedPieceId={selectedPieceId}
+            />
+          </div>
 
           {dragState ? (
             <Piece
@@ -403,7 +407,7 @@ function Game() {
             />
           ) : null}
 
-          <div className="tray" ref={trayRef}>
+          <div className="tray pieces-container" ref={trayRef}>
             {trayPieces.length > 0 ? (
               trayPieces.map((piece) => (
                 <div className="tray-item" key={piece.id}>
@@ -417,13 +421,11 @@ function Game() {
                   <div className="tray-label">{piece.name}</div>
                 </div>
               ))
-            ) : (
-              <div className="tray-empty">All pieces are on the board.</div>
-            )}
+            ) : null}
           </div>
 
           <button
-            className="bubble bubble-rotate"
+            className="bubble bubble-rotate rotate-button"
             disabled={!selectedPieceId || isComplete}
             onClick={rotateActivePiece}
             onPointerDown={handleRotateButtonPointerDown}

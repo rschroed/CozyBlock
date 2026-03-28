@@ -1,7 +1,19 @@
 :root {
-  color: #1f1f1f;
-  background: #f4f3ee;
-  font-family: Arial, Helvetica, sans-serif;
+  --stage: #050505;
+  --card-surface: #f4f3ee;
+  --panel-surface: #fffdf8;
+  --accent: #5b8def;
+  --accent-dark: #1f5aa6;
+  --text: #222222;
+  --text-muted: #5f5f5f;
+  --panel-border: #d7d2c6;
+  --cell-border: #d6d4cc;
+  --block-background: #f6f6f6;
+  --shadow: rgba(0, 0, 0, 0.22);
+  color: var(--text);
+  background: var(--stage);
+  font-family:
+    Inter, "SF Pro Text", "Segoe UI", Arial, sans-serif;
   line-height: 1.4;
 }
 
@@ -17,7 +29,7 @@ body,
 }
 
 body {
-  background: #f4f3ee;
+  background: var(--stage);
 }
 
 button {
@@ -29,15 +41,20 @@ button {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 24px;
+  padding: 18px 14px 28px;
+  background: var(--stage);
 }
 
 .game {
-  width: min(100%, 860px);
+  width: min(100%, 392px);
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  gap: 14px;
+  gap: 16px;
+  padding: 24px 10px 78px;
+  border: 8px solid var(--accent);
+  border-radius: 24px;
+  background: var(--card-surface);
+  box-shadow: 0 18px 40px var(--shadow);
 }
 
 .game-header {
@@ -45,29 +62,37 @@ button {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
+  padding: 0 10px;
 }
 
 .game-copy {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+  min-width: 0;
 }
 
 .game-copy h1 {
   margin: 0;
-  font-size: 1.8rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
 }
 
 .puzzle-trigger {
   padding: 0;
   border: 0;
   background: transparent;
-  color: #1f5aa6;
+  color: var(--accent-dark);
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.2;
   text-align: left;
   cursor: pointer;
   text-decoration: underline;
+  text-decoration-thickness: 1px;
   text-underline-offset: 2px;
 }
 
@@ -75,19 +100,14 @@ button {
   color: #143c6f;
 }
 
-.puzzle-trigger:focus-visible {
-  outline: 2px solid #1f5aa6;
+.puzzle-trigger:focus-visible,
+.completion-next:focus-visible,
+.picker-header button:focus-visible,
+.picker-grid button:focus-visible,
+.bubble-reset:focus-visible,
+.bubble-rotate:focus-visible {
+  outline: 2px solid var(--accent-dark);
   outline-offset: 3px;
-}
-
-.status {
-  min-height: 0;
-  font-weight: 600;
-  text-align: center;
-}
-
-.status.complete {
-  color: #22663a;
 }
 
 .header-bubble {
@@ -95,91 +115,99 @@ button {
 }
 
 .bubble {
-  width: 112px;
+  width: 66px;
   aspect-ratio: 1;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 14px;
-  border: 2px solid #222;
+  padding: 10px;
+  border: 1.5px solid var(--text);
   background: #ffffff;
-  color: #222;
-  font-size: 0.88rem;
+  color: var(--text);
+  font-size: 0.82rem;
   font-weight: 700;
   line-height: 1.05;
   text-align: center;
+  box-shadow: none;
 }
 
 .bubble-helper {
-  transform: rotate(9deg);
+  transform: rotate(10deg);
 }
 
 .bubble-reset,
 .bubble-rotate {
-  background: #5e89e6;
+  border-color: var(--accent);
+  background: var(--accent);
   color: #ffffff;
-  border-color: #5e89e6;
 }
 
 .bubble-reset {
-  transform: rotate(9deg);
+  transform: rotate(10deg);
 }
 
 .bubble-rotate {
   position: absolute;
-  left: 0;
+  left: 4px;
   bottom: 0;
-  transform: rotate(-11deg);
+  transform: rotate(-12deg);
+  z-index: 25;
+  opacity: 0.6;
 }
 
 .bubble-rotate:disabled {
-  opacity: 0.55;
+  opacity: 0.35;
 }
 
 .play-area {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding-bottom: 104px;
+  gap: 11px;
+  min-height: 493px;
+  padding-bottom: 86px;
+}
+
+.board-area {
+  min-height: 234px;
 }
 
 .completion-overlay {
   position: absolute;
-  inset: 12px 12px 112px;
+  inset: 0 0 86px;
   z-index: 20;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 18px;
-  padding: 24px 20px;
+  padding: 24px 16px;
+  border: 1px solid var(--panel-border);
   background: rgba(0, 0, 0, 0.96);
   color: #ffffff;
   text-align: center;
-  overflow: hidden;
 }
 
 .completion-badge {
-  width: 132px;
+  width: 108px;
   aspect-ratio: 1;
   border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #5e89e6;
+  background: var(--accent);
   color: #ffffff;
-  font-size: 1.8rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 800;
   line-height: 1;
 }
 
 .completion-copy {
-  max-width: 20ch;
-  font-size: 1.18rem;
-  font-weight: 700;
-  line-height: 1.14;
+  max-width: 12ch;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.12;
 }
 
 .completion-next {
@@ -187,15 +215,15 @@ button {
   border: 0;
   background: transparent;
   color: #ffffff;
-  font-size: 1rem;
+  font-size: 0.82rem;
   font-weight: 700;
   text-decoration: underline;
-  text-underline-offset: 5px;
+  text-underline-offset: 4px;
   cursor: pointer;
 }
 
 .completion-done {
-  font-size: 1rem;
+  font-size: 0.82rem;
   font-weight: 700;
 }
 
@@ -204,20 +232,21 @@ button {
   inset: 0;
   z-index: 60;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  padding: 20px;
-  background: rgba(31, 31, 31, 0.32);
+  padding: 18px 14px;
+  background: rgba(0, 0, 0, 0.52);
 }
 
 .picker-dialog {
-  width: min(100%, 440px);
+  width: min(100%, 392px);
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 16px;
-  border: 1px solid #d2d0c8;
-  background: #ffffff;
+  gap: 12px;
+  padding: 16px 14px;
+  border: 6px solid var(--accent);
+  border-radius: 22px;
+  background: var(--card-surface);
 }
 
 .picker-header {
@@ -227,17 +256,23 @@ button {
   gap: 12px;
 }
 
+.picker-header strong {
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+}
+
 .picker-header button,
 .picker-grid button {
   padding: 10px 12px;
-  border: 1px solid #b6b6b6;
-  background: #ffffff;
-  color: #222;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: var(--panel-surface);
+  color: var(--text);
 }
 
 .picker-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 8px;
 }
 
@@ -246,38 +281,37 @@ button {
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
-  min-height: 72px;
+  min-height: 64px;
   text-align: left;
 }
 
 .picker-grid button span:first-child {
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .picker-grid button.active {
-  background: #1f1f1f;
+  background: var(--accent);
   color: #ffffff;
-  border-color: #1f1f1f;
+  border-color: var(--accent);
 }
 
 .board-shell {
-  padding: 12px;
-  border: 1px solid #d2d0c8;
-  background: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 234px;
+  padding: 13px 0 0;
 }
 
 .board {
   position: relative;
   overflow: visible;
-  background:
-    linear-gradient(to right, transparent 0, transparent 100%),
-    linear-gradient(to bottom, transparent 0, transparent 100%);
 }
 
 .board-cell {
   position: absolute;
-  border: 1px solid #d5d5d5;
-  background: #fbfbfb;
+  border: 1px solid var(--cell-border);
+  background: var(--block-background);
 }
 
 .piece {
@@ -288,43 +322,55 @@ button {
 }
 
 .piece.is-selected {
-  outline: 4px solid #202020;
+  outline: 4px solid var(--text);
   outline-offset: 3px;
 }
 
 .piece-cell {
   position: absolute;
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.14);
 }
 
 .tray {
   width: 100%;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-start;
-  gap: 16px;
   align-items: flex-start;
-  padding: 12px 18px 20px;
-  border: 1px solid #d2d0c8;
-  background: #ffffff;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 0 0 0 10px;
+  margin-inline: -10px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.tray::-webkit-scrollbar {
+  display: none;
+}
+
+.pieces-container {
+  width: calc(100% + 20px);
 }
 
 .tray-item {
-  min-width: 136px;
+  min-width: fit-content;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 9px;
 }
 
 .tray-label {
-  font-size: 0.95rem;
+  font-size: 0.77rem;
   font-weight: 600;
-  color: #555;
+  color: var(--text-muted);
 }
 
 .tray-empty {
-  color: #666;
+  font-size: 0.86rem;
+  color: var(--text-muted);
 }
 
 .floating-piece {
@@ -345,95 +391,64 @@ button {
   pointer-events: none;
 }
 
-@media (max-width: 640px) {
+@media (min-width: 641px) {
   .app {
-    align-items: flex-start;
-    padding: 16px 14px 24px;
+    align-items: center;
+    padding: 28px 20px;
+  }
+}
+
+@media (max-width: 380px) {
+  .app {
+    padding-inline: 10px;
   }
 
   .game {
-    gap: 14px;
-  }
-
-  .game-header {
-    align-items: flex-start;
+    width: 100%;
+    padding: 22px 10px 76px;
+    border-width: 7px;
+    border-radius: 22px;
   }
 
   .game-copy h1 {
-    font-size: 1.2rem;
+    font-size: 0.94rem;
+  }
+
+  .puzzle-trigger {
+    font-size: 0.76rem;
   }
 
   .bubble {
-    width: 80px;
-    font-size: 1rem;
-    padding: 10px;
+    width: 62px;
+    font-size: 0.76rem;
+    padding: 8px;
   }
 
-  .completion-overlay {
-    inset: 10px 10px 100px;
-    gap: 16px;
-    padding: 18px 14px;
+  .play-area {
+    min-height: 476px;
+    padding-bottom: 80px;
+  }
+
+  .board-area,
+  .board-shell {
+    min-height: 222px;
   }
 
   .completion-badge {
-    width: 104px;
-    font-size: 1.4rem;
+    width: 96px;
+    font-size: 0.92rem;
   }
 
   .completion-copy {
-    max-width: 16ch;
-    font-size: 0.92rem;
+    font-size: 0.88rem;
   }
 
   .completion-next,
   .completion-done {
-    font-size: 0.9rem;
-  }
-
-  .board-shell {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    padding: 10px;
-  }
-
-  .tray {
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    overflow-x: auto;
-    padding: 12px 12px 20px;
-    gap: 12px;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .tray-item {
-    min-width: fit-content;
-    flex: 0 0 auto;
+    font-size: 0.78rem;
   }
 
   .tray-label {
-    font-size: 0.9rem;
-  }
-
-  .play-area {
-    padding-bottom: 96px;
-  }
-
-  .bubble-rotate {
-    left: 8px;
-  }
-
-  .picker-backdrop {
-    align-items: flex-end;
-    padding: 14px;
-  }
-
-  .picker-dialog {
-    width: 100%;
-    max-width: none;
-  }
-
-  .picker-grid {
-    grid-template-columns: 1fr;
+    font-size: 0.74rem;
   }
 }
