@@ -10,7 +10,8 @@ import {
 import Board from './Board';
 import Piece from './Piece';
 
-const CELL_SIZE = 52;
+const DESKTOP_CELL_SIZE = 52;
+const MOBILE_BREAKPOINT = 640;
 
 function createInitialTrayRotations(pieces) {
   return Object.fromEntries(pieces.map((piece) => [piece.id, 0]));
@@ -21,13 +22,23 @@ function Game() {
   const dragStateRef = useRef(null);
   const placedPiecesRef = useRef({});
   const currentLevelRef = useRef(LEVELS[0]);
+  const cellSizeRef = useRef(DESKTOP_CELL_SIZE);
   const [levelIndex, setLevelIndex] = useState(0);
   const [placedPieces, setPlacedPieces] = useState({});
   const [trayRotations, setTrayRotations] = useState(createInitialTrayRotations(PIECES));
   const [selectedPieceId, setSelectedPieceId] = useState(null);
   const [dragState, setDragState] = useState(null);
+  const [viewportWidth, setViewportWidth] = useState(
+    typeof window === 'undefined' ? 1024 : window.innerWidth,
+  );
   const currentLevel = LEVELS[levelIndex];
   const pieceMap = useMemo(() => Object.fromEntries(PIECES.map((piece) => [piece.id, piece])), []);
+  const boardColumnCount = Math.max(...currentLevel.board.map((row) => row.length));
+  const isMobileLayout = viewportWidth <= MOBILE_BREAKPOINT;
+  const mobileBoardWidth = viewportWidth - 72;
+  const cellSize = isMobileLayout
+    ? Math.max(34, Math.min(DESKTOP_CELL_SIZE, Math.floor(mobileBoardWidth / boardColumnCount)))
+    : DESKTOP_CELL_SIZE;
 
   useEffect(() => {
     placedPiecesRef.current = placedPieces;
@@ -40,6 +51,19 @@ function Game() {
   useEffect(() => {
     currentLevelRef.current = currentLevel;
   }, [currentLevel]);
+
+  useEffect(() => {
+    cellSizeRef.current = cellSize;
+  }, [cellSize]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setViewportWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const occupancyMap = useMemo(
     () => buildOccupancyMap(currentLevel.board, PIECES, placedPieces),
@@ -61,8 +85,9 @@ function Game() {
       return null;
     }
 
-    const snappedX = Math.round((pointer.x - boardRect.left - grabOffset.x) / CELL_SIZE);
-    const snappedY = Math.round((pointer.y - boardRect.top - grabOffset.y) / CELL_SIZE);
+    const activeCellSize = cellSizeRef.current;
+    const snappedX = Math.round((pointer.x - boardRect.left - grabOffset.x) / activeCellSize);
+    const snappedY = Math.round((pointer.y - boardRect.top - grabOffset.y) / activeCellSize);
     const isValid = canPlacePiece(
       currentLevelRef.current.board,
       PIECES,
@@ -274,6 +299,7 @@ function Game() {
 
   const canGoPrevious = levelIndex > 0;
   const canGoNext = levelIndex < LEVELS.length - 1;
+  const selectedPieceName = selectedPieceId ? pieceMap[selectedPieceId]?.name : null;
 
   const trayPieces = PIECES.filter(
     (piece) => !placedPieces[piece.id] && dragState?.pieceId !== piece.id,
@@ -329,7 +355,7 @@ function Game() {
           activeDragPieceId={dragState?.pieceId ?? null}
           board={currentLevel.board}
           boardRef={boardRef}
-          cellSize={CELL_SIZE}
+          cellSize={cellSize}
           ghostPlacement={dragState?.preview ?? null}
           onPiecePointerDown={beginDrag}
           pieces={pieceMap}
@@ -339,7 +365,7 @@ function Game() {
 
         {dragState ? (
           <Piece
-            cellSize={CELL_SIZE}
+            cellSize={cellSize}
             className="floating-piece"
             piece={pieceMap[dragState.pieceId]}
             rotation={dragState.rotation}
@@ -355,7 +381,7 @@ function Game() {
             trayPieces.map((piece) => (
               <div className="tray-item" key={piece.id}>
                 <Piece
-                  cellSize={CELL_SIZE}
+                  cellSize={cellSize}
                   className={selectedPieceId === piece.id ? 'is-selected' : ''}
                   onPointerDown={(event) => beginDrag(piece.id, event)}
                   piece={piece}
@@ -367,6 +393,24 @@ function Game() {
           ) : (
             <div className="tray-empty">All pieces are on the board.</div>
           )}
+        </div>
+
+        <div className="mobile-toolbar">
+          <div className="mobile-toolbar-copy">
+            {selectedPieceName ? `Selected: ${selectedPieceName}` : 'Tap a piece, then rotate it here.'}
+          </div>
+          <div className="mobile-toolbar-actions">
+            <button
+              disabled={!selectedPieceId || isComplete}
+              onClick={rotateActivePiece}
+              type="button"
+            >
+              Rotate Piece
+            </button>
+            <button onClick={resetGame} type="button">
+              Reset
+            </button>
+          </div>
         </div>
       </div>
     </div>

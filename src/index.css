@@ -93,6 +93,10 @@ button {
   opacity: 0.5;
 }
 
+.mobile-toolbar {
+  display: none;
+}
+
 .level-controls {
   width: 100%;
   display: flex;
@@ -217,19 +221,99 @@ button {
 
 @media (max-width: 640px) {
   .app {
-    padding: 16px;
+    align-items: flex-start;
+    padding: 16px 14px 24px;
+  }
+
+  .game {
+    gap: 14px;
   }
 
   .game-header {
-    flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
+  }
+
+  .game-copy h1 {
+    font-size: 1.2rem;
   }
 
   .controls {
     width: 100%;
+    display: none;
   }
 
-  .controls button {
-    flex: 1 1 0;
+  .level-controls {
+    gap: 8px;
+  }
+
+  .level-controls > button,
+  .level-pills button {
+    padding: 8px 10px;
+  }
+
+  .level-pills {
+    width: 100%;
+    order: 2;
+  }
+
+  .board-shell {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+  }
+
+  .tray {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding: 12px;
+    gap: 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tray-item {
+    min-width: fit-content;
+    flex: 0 0 auto;
+  }
+
+  .tray-label {
+    font-size: 0.8rem;
+  }
+
+  .mobile-toolbar {
+    position: sticky;
+    bottom: 10px;
+    z-index: 40;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid #d2d0c8;
+    background: rgba(255, 255, 255, 0.96);
+  }
+
+  .mobile-toolbar-copy {
+    font-size: 0.9rem;
+    color: #444;
+    text-align: center;
+  }
+
+  .mobile-toolbar-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .mobile-toolbar-actions button {
+    padding: 12px 10px;
+    border: 1px solid #b6b6b6;
+    background: #ffffff;
+    color: #222;
+  }
+
+  .mobile-toolbar-actions button:disabled {
+    opacity: 0.5;
   }
 }
