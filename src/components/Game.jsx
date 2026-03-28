@@ -260,6 +260,16 @@ function Game() {
     }));
   };
 
+  const handleRotateButtonPointerDown = (event) => {
+    if (event.pointerType !== 'touch') {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    rotateActivePiece();
+  };
+
   const resetGame = () => {
     resetLevelState();
   };
@@ -416,6 +426,7 @@ function Game() {
             className="bubble bubble-rotate"
             disabled={!selectedPieceId || isComplete}
             onClick={rotateActivePiece}
+            onPointerDown={handleRotateButtonPointerDown}
             type="button"
           >
             Rotate
