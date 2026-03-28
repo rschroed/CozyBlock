@@ -19,6 +19,7 @@ function createInitialTrayRotations(pieces) {
 
 function Game() {
   const boardRef = useRef(null);
+  const trayRef = useRef(null);
   const dragStateRef = useRef(null);
   const placedPiecesRef = useRef({});
   const currentLevelRef = useRef(LEVELS[0]);
@@ -28,6 +29,7 @@ function Game() {
   const [trayRotations, setTrayRotations] = useState(createInitialTrayRotations(PIECES));
   const [selectedPieceId, setSelectedPieceId] = useState(null);
   const [dragState, setDragState] = useState(null);
+  const [isLevelPickerOpen, setIsLevelPickerOpen] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(
     typeof window === 'undefined' ? 1024 : window.innerWidth,
   );
@@ -113,6 +115,20 @@ function Game() {
     setDragState(nextState);
   };
 
+  const isPointerInsideRect = (pointer, element) => {
+    const rect = element?.getBoundingClientRect();
+    if (!rect) {
+      return false;
+    }
+
+    return (
+      pointer.x >= rect.left &&
+      pointer.x <= rect.right &&
+      pointer.y >= rect.top &&
+      pointer.y <= rect.bottom
+    );
+  };
+
   const beginDrag = (pieceId, event, sourcePlacement = null) => {
     if (isComplete || event.button > 0) {
       return;
@@ -162,6 +178,19 @@ function Game() {
           currentDragState.rotation,
         ),
       );
+    } else if (isPointerInsideRect(currentDragState.pointer, trayRef.current)) {
+      if (currentDragState.sourcePlacement) {
+        setPlacedPieces((currentPlacedPieces) => {
+          const nextPlacedPieces = { ...currentPlacedPieces };
+          delete nextPlacedPieces[currentDragState.pieceId];
+          return nextPlacedPieces;
+        });
+      }
+
+      setTrayRotations((currentTrayRotations) => ({
+        ...currentTrayRotations,
+        [currentDragState.pieceId]: currentDragState.rotation,
+      }));
     } else if (!currentDragState.sourcePlacement) {
       setTrayRotations((currentTrayRotations) => ({
         ...currentTrayRotations,
@@ -238,6 +267,7 @@ function Game() {
   const goToLevel = (nextIndex) => {
     resetLevelState();
     setLevelIndex(nextIndex);
+    setIsLevelPickerOpen(false);
   };
 
   useEffect(() => {
@@ -285,6 +315,11 @@ function Game() {
 
   useEffect(() => {
     const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsLevelPickerOpen(false);
+        return;
+      }
+
       if (event.key.toLowerCase() !== 'r') {
         return;
       }
@@ -297,9 +332,8 @@ function Game() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   });
 
-  const canGoPrevious = levelIndex > 0;
-  const canGoNext = levelIndex < LEVELS.length - 1;
-  const selectedPieceName = selectedPieceId ? pieceMap[selectedPieceId]?.name : null;
+  const hasAnyPlacedPieces = Object.keys(placedPieces).length > 0;
+  const hasNextPuzzle = levelIndex < LEVELS.length - 1;
 
   const trayPieces = PIECES.filter(
     (piece) => !placedPieces[piece.id] && dragState?.pieceId !== piece.id,
@@ -311,108 +345,147 @@ function Game() {
         <div className="game-header">
           <div className="game-copy">
             <h1>Cozy Block Prototype</h1>
-            <p>
+            <button className="puzzle-trigger" onClick={() => setIsLevelPickerOpen(true)} type="button">
               Puzzle {levelIndex + 1} of {LEVELS.length}: {currentLevel.name}
-            </p>
-          </div>
-
-          <div className="controls">
-            <button disabled={!selectedPieceId || isComplete} onClick={rotateActivePiece} type="button">
-              Rotate
-            </button>
-            <button onClick={resetGame} type="button">
-              Reset
             </button>
           </div>
-        </div>
 
-        <div className="level-controls">
-          <button disabled={!canGoPrevious} onClick={() => goToLevel(levelIndex - 1)} type="button">
-            Previous
-          </button>
-          <div className="level-pills">
-            {LEVELS.map((level, index) => (
-              <button
-                className={index === levelIndex ? 'active' : ''}
-                key={level.id}
-                onClick={() => goToLevel(index)}
-                type="button"
-              >
-                {index + 1}
+          <div className="header-bubble">
+            {hasAnyPlacedPieces ? (
+              <button className="bubble bubble-reset" onClick={resetGame} type="button">
+                Reset
+                <br />
+                Puzzle
               </button>
-            ))}
-          </div>
-          <button disabled={!canGoNext} onClick={() => goToLevel(levelIndex + 1)} type="button">
-            Next
-          </button>
-        </div>
-
-        <div className={`status ${isComplete ? 'complete' : ''}`.trim()}>
-          {isComplete ? `Complete: ${currentLevel.name}` : 'Fill every visible cell.'}
-        </div>
-
-        <Board
-          activeDragPieceId={dragState?.pieceId ?? null}
-          board={currentLevel.board}
-          boardRef={boardRef}
-          cellSize={cellSize}
-          ghostPlacement={dragState?.preview ?? null}
-          onPiecePointerDown={beginDrag}
-          pieces={pieceMap}
-          placedPieces={placedPieces}
-          selectedPieceId={selectedPieceId}
-        />
-
-        {dragState ? (
-          <Piece
-            cellSize={cellSize}
-            className="floating-piece"
-            piece={pieceMap[dragState.pieceId]}
-            rotation={dragState.rotation}
-            style={{
-              left: dragState.pointer.x - dragState.grabOffset.x,
-              top: dragState.pointer.y - dragState.grabOffset.y,
-            }}
-          />
-        ) : null}
-
-        <div className="tray">
-          {trayPieces.length > 0 ? (
-            trayPieces.map((piece) => (
-              <div className="tray-item" key={piece.id}>
-                <Piece
-                  cellSize={cellSize}
-                  className={selectedPieceId === piece.id ? 'is-selected' : ''}
-                  onPointerDown={(event) => beginDrag(piece.id, event)}
-                  piece={piece}
-                  rotation={getPieceRotation(piece.id)}
-                />
-                <div className="tray-label">{piece.name}</div>
+            ) : (
+              <div className="bubble bubble-helper">
+                Fill the
+                <br />
+                grid!
               </div>
-            ))
-          ) : (
-            <div className="tray-empty">All pieces are on the board.</div>
-          )}
+            )}
+          </div>
         </div>
 
-        <div className="mobile-toolbar">
-          <div className="mobile-toolbar-copy">
-            {selectedPieceName ? `Selected: ${selectedPieceName}` : 'Tap a piece, then rotate it here.'}
+        <div className="play-area">
+          <Board
+            activeDragPieceId={dragState?.pieceId ?? null}
+            board={currentLevel.board}
+            boardRef={boardRef}
+            cellSize={cellSize}
+            ghostPlacement={dragState?.preview ?? null}
+            onPiecePointerDown={beginDrag}
+            pieces={pieceMap}
+            placedPieces={placedPieces}
+            selectedPieceId={selectedPieceId}
+          />
+
+          {dragState ? (
+            <Piece
+              cellSize={cellSize}
+              className="floating-piece"
+              piece={pieceMap[dragState.pieceId]}
+              rotation={dragState.rotation}
+              style={{
+                left: dragState.pointer.x - dragState.grabOffset.x,
+                top: dragState.pointer.y - dragState.grabOffset.y,
+              }}
+            />
+          ) : null}
+
+          <div className="tray" ref={trayRef}>
+            {trayPieces.length > 0 ? (
+              trayPieces.map((piece) => (
+                <div className="tray-item" key={piece.id}>
+                  <Piece
+                    cellSize={cellSize}
+                    className={selectedPieceId === piece.id ? 'is-selected' : ''}
+                    onPointerDown={(event) => beginDrag(piece.id, event)}
+                    piece={piece}
+                    rotation={getPieceRotation(piece.id)}
+                  />
+                  <div className="tray-label">{piece.name}</div>
+                </div>
+              ))
+            ) : (
+              <div className="tray-empty">All pieces are on the board.</div>
+            )}
           </div>
-          <div className="mobile-toolbar-actions">
-            <button
-              disabled={!selectedPieceId || isComplete}
-              onClick={rotateActivePiece}
-              type="button"
-            >
-              Rotate Piece
-            </button>
-            <button onClick={resetGame} type="button">
-              Reset
-            </button>
-          </div>
+
+          <button
+            className="bubble bubble-rotate"
+            disabled={!selectedPieceId || isComplete}
+            onClick={rotateActivePiece}
+            type="button"
+          >
+            Rotate
+            <br />
+            Piece
+          </button>
+
+          {isComplete ? (
+            <div className="completion-overlay">
+              <div className="completion-badge">Yay!</div>
+              <div className="completion-copy">
+                You completed
+                <br />
+                Puzzle {levelIndex + 1} of {LEVELS.length}:
+                <br />
+                {currentLevel.name}
+              </div>
+              {hasNextPuzzle ? (
+                <button
+                  className="completion-next"
+                  onClick={() => goToLevel(levelIndex + 1)}
+                  type="button"
+                >
+                  Play the next puzzle
+                </button>
+              ) : (
+                <div className="completion-done">You finished all puzzles.</div>
+              )}
+            </div>
+          ) : null}
         </div>
       </div>
+
+      {isLevelPickerOpen ? (
+        <div
+          className="picker-backdrop"
+          onClick={() => setIsLevelPickerOpen(false)}
+          role="presentation"
+        >
+          <div
+            aria-label="Choose a puzzle"
+            aria-modal="true"
+            className="picker-dialog"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+          >
+            <div className="picker-header">
+              <div>
+                <strong>Choose a Puzzle</strong>
+              </div>
+              <button onClick={() => setIsLevelPickerOpen(false)} type="button">
+                Close
+              </button>
+            </div>
+            <div className="picker-grid">
+              {LEVELS.map((level, index) => (
+                <button
+                  className={index === levelIndex ? 'active' : ''}
+                  key={level.id}
+                  onClick={() => goToLevel(index)}
+                  type="button"
+                >
+                  <span>{index + 1}</span>
+                  <span>{level.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
