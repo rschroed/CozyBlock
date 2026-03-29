@@ -63,6 +63,8 @@ The repo may also retain GitHub’s default labels alongside these starter workf
 ## Design And Playtest References
 - Figma is used for visual direction and iteration.
 - GitHub issues should be the home for playtest findings, UI follow-ups, and implementation tasks.
+- World progression guidance lives in `docs/world-design-strategy.md`.
+- Level construction guidance lives in `docs/level-design-system.md`.
 
 ## Branch Protection Recommendation
 
