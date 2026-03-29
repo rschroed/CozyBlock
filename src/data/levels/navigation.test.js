@@ -9,11 +9,11 @@ describe('level navigation helpers', () => {
         setName: 'World 0',
         localLevelIndex: 0,
         localLevelNumber: 1,
-        localLevelCount: 4,
+        localLevelCount: 1,
         hasPreviousLevelInSet: false,
       });
 
-      expect(getLevelNavigation(4)).toMatchObject({
+      expect(getLevelNavigation(1)).toMatchObject({
         setId: 'world-1',
         setName: 'World 1',
         localLevelIndex: 0,
@@ -22,7 +22,7 @@ describe('level navigation helpers', () => {
         hasPreviousLevelInSet: false,
       });
 
-      expect(getLevelNavigation(12)).toMatchObject({
+      expect(getLevelNavigation(9)).toMatchObject({
         setId: 'world-2',
         setName: 'World 2',
         localLevelIndex: 0,
@@ -33,7 +33,7 @@ describe('level navigation helpers', () => {
     });
 
     it('reports the correct metadata for a middle level within a set', () => {
-      expect(getLevelNavigation(6)).toMatchObject({
+      expect(getLevelNavigation(3)).toMatchObject({
         setId: 'world-1',
         localLevelIndex: 2,
         localLevelNumber: 3,
@@ -45,22 +45,22 @@ describe('level navigation helpers', () => {
     });
 
     it('reports a set boundary transition at the last level of a non-final set', () => {
-      expect(getLevelNavigation(3)).toMatchObject({
+      expect(getLevelNavigation(0)).toMatchObject({
         setId: 'world-0',
-        localLevelNumber: 4,
-        localLevelCount: 4,
+        localLevelNumber: 1,
+        localLevelCount: 1,
         hasNextLevelInSet: false,
         crossesIntoNextSet: true,
       });
 
-      expect(getLevelNavigation(3)?.nextSet).toMatchObject({
+      expect(getLevelNavigation(0)?.nextSet).toMatchObject({
         id: 'world-1',
         name: 'World 1',
       });
     });
 
     it('reports no next set at the last level of the final set', () => {
-      expect(getLevelNavigation(19)).toMatchObject({
+      expect(getLevelNavigation(16)).toMatchObject({
         setId: 'world-2',
         localLevelNumber: 8,
         localLevelCount: 8,
@@ -87,25 +87,22 @@ describe('level navigation helpers', () => {
         {
           setId: 'world-0',
           startLevelIndex: 0,
-          levels: [
-            { levelIndex: 0, localLevelNumber: 1 },
-            { levelIndex: 1, localLevelNumber: 2 },
-          ],
+          levels: [{ levelIndex: 0, localLevelNumber: 1 }],
         },
         {
           setId: 'world-1',
-          startLevelIndex: 4,
+          startLevelIndex: 1,
           levels: [
-            { levelIndex: 4, localLevelNumber: 1 },
-            { levelIndex: 5, localLevelNumber: 2 },
+            { levelIndex: 1, localLevelNumber: 1 },
+            { levelIndex: 2, localLevelNumber: 2 },
           ],
         },
         {
           setId: 'world-2',
-          startLevelIndex: 12,
+          startLevelIndex: 9,
           levels: [
-            { levelIndex: 12, localLevelNumber: 1 },
-            { levelIndex: 13, localLevelNumber: 2 },
+            { levelIndex: 9, localLevelNumber: 1 },
+            { levelIndex: 10, localLevelNumber: 2 },
           ],
         },
       ]);

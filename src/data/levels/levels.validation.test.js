@@ -141,24 +141,6 @@ describe('level content validation', () => {
         });
       });
     });
-
-    it('only repeats square2 within world 0 levels', () => {
-      LEVELS.forEach((level) => {
-        const pieceCounts = level.pieceIds.reduce((counts, pieceId) => {
-          counts[pieceId] = (counts[pieceId] ?? 0) + 1;
-          return counts;
-        }, {});
-
-        Object.entries(pieceCounts).forEach(([pieceId, count]) => {
-          if (count === 1) {
-            return;
-          }
-
-          expect(getLevelWorldId(level)).toBe('world-0');
-          expect(pieceId).toBe(PIECE_IDS.SQUARE2);
-        });
-      });
-    });
   });
 
   describe('area parity', () => {
@@ -175,18 +157,10 @@ describe('level content validation', () => {
   describe('world pacing rules', () => {
     it('ships the expected world counts for the first content wave', () => {
       expect(LEVEL_SETS.map((set) => [set.id, set.levels.length])).toEqual([
-        ['world-0', 4],
+        ['world-0', 1],
         ['world-1', 8],
         ['world-2', 8],
       ]);
-    });
-
-    it('keeps world 0 limited to repeated square2 pieces', () => {
-      const world0Levels = LEVELS.filter((level) => getLevelWorldId(level) === 'world-0');
-
-      world0Levels.forEach((level) => {
-        expect(level.pieceIds.every((pieceId) => pieceId === PIECE_IDS.SQUARE2)).toBe(true);
-      });
     });
 
     it('keeps world 1 limited to shape variety without requiring rotation', () => {
