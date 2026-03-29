@@ -124,7 +124,7 @@ Key drivers of difficulty:
 ### Harder Levels
 
 - multiple plausible moves
-- delayed failure
+- visible downstream pressure
 - tighter constraints
 
 Avoid artificial difficulty, such as large boards with no structure.
