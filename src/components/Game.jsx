@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { LEVELS } from '../data/levels';
-import { PIECE_LIBRARY } from '../data/pieces';
+import { createLevelPieceInstances, LEVELS } from '../data/levels';
 import {
   buildOccupancyMap,
   canPlacePiece,
@@ -15,12 +14,8 @@ const DESKTOP_CELL_SIZE = 52;
 const CARD_MAX_WIDTH = 392;
 const BOARD_HORIZONTAL_PADDING = 56;
 
-function createInitialTrayRotations(pieceIds) {
-  return Object.fromEntries(pieceIds.map((pieceId) => [pieceId, 0]));
-}
-
-function getLevelPieces(level) {
-  return level.pieceIds.map((pieceId) => PIECE_LIBRARY[pieceId]).filter(Boolean);
+function createInitialTrayRotations(levelPieces) {
+  return Object.fromEntries(levelPieces.map((piece) => [piece.id, 0]));
 }
 
 function Game() {
@@ -29,11 +24,15 @@ function Game() {
   const dragStateRef = useRef(null);
   const placedPiecesRef = useRef({});
   const currentLevelRef = useRef(LEVELS[0]);
+  const currentLevelPiecesRef = useRef(createLevelPieceInstances(LEVELS[0]));
+  const currentPieceMapRef = useRef(
+    Object.fromEntries(createLevelPieceInstances(LEVELS[0]).map((piece) => [piece.id, piece])),
+  );
   const cellSizeRef = useRef(DESKTOP_CELL_SIZE);
   const [levelIndex, setLevelIndex] = useState(0);
   const [placedPieces, setPlacedPieces] = useState({});
   const [trayRotations, setTrayRotations] = useState(
-    createInitialTrayRotations(LEVELS[0].pieceIds),
+    createInitialTrayRotations(createLevelPieceInstances(LEVELS[0])),
   );
   const [selectedPieceId, setSelectedPieceId] = useState(null);
   const [dragState, setDragState] = useState(null);
@@ -42,8 +41,11 @@ function Game() {
     typeof window === 'undefined' ? 1024 : window.innerWidth,
   );
   const currentLevel = LEVELS[levelIndex];
-  const currentLevelPieces = useMemo(() => getLevelPieces(currentLevel), [currentLevel]);
-  const pieceMap = PIECE_LIBRARY;
+  const currentLevelPieces = useMemo(() => createLevelPieceInstances(currentLevel), [currentLevel]);
+  const pieceMap = useMemo(
+    () => Object.fromEntries(currentLevelPieces.map((piece) => [piece.id, piece])),
+    [currentLevelPieces],
+  );
   const boardColumnCount = Math.max(...currentLevel.board.map((row) => row.length));
   const availableBoardWidth =
     Math.min(CARD_MAX_WIDTH, Math.max(320, viewportWidth - 28)) - BOARD_HORIZONTAL_PADDING;
@@ -63,6 +65,14 @@ function Game() {
   useEffect(() => {
     currentLevelRef.current = currentLevel;
   }, [currentLevel]);
+
+  useEffect(() => {
+    currentLevelPiecesRef.current = currentLevelPieces;
+  }, [currentLevelPieces]);
+
+  useEffect(() => {
+    currentPieceMapRef.current = pieceMap;
+  }, [pieceMap]);
 
   useEffect(() => {
     cellSizeRef.current = cellSize;
@@ -102,9 +112,9 @@ function Game() {
     const snappedY = Math.round((pointer.y - boardRect.top - grabOffset.y) / activeCellSize);
     const isValid = canPlacePiece(
       currentLevelRef.current.board,
-      getLevelPieces(currentLevelRef.current),
+      currentLevelPiecesRef.current,
       placedPiecesRef.current,
-      pieceMap[pieceId],
+      currentPieceMapRef.current[pieceId],
       snappedX,
       snappedY,
       rotation,
@@ -167,9 +177,10 @@ function Game() {
   };
 
   const resetLevelState = (level = currentLevelRef.current) => {
+    const levelPieces = createLevelPieceInstances(level);
     updateDragState(null);
     setPlacedPieces({});
-    setTrayRotations(createInitialTrayRotations(level.pieceIds));
+    setTrayRotations(createInitialTrayRotations(levelPieces));
     setSelectedPieceId(null);
   };
 
