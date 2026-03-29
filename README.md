@@ -25,7 +25,8 @@ npm run build
 - `src/components/Game.jsx`: main game flow and interactions
 - `src/components/Board.jsx`: board rendering
 - `src/components/Piece.jsx`: piece rendering
-- `src/data/levels.js`: pieces and puzzle boards
+- `src/data/pieces/`: canonical piece library
+- `src/data/levels/`: set-based handcrafted level files
 - `src/utils/grid.js`: placement and collision rules
 - `src/index.css`: UI styling
 

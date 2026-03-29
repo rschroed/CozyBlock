@@ -9,7 +9,8 @@
 - `src/components/Game.jsx`: top-level game state, drag/rotate interactions, level switching, and UI flow.
 - `src/components/Board.jsx`: board rendering and placed/ghost piece rendering.
 - `src/components/Piece.jsx`: piece rendering from local grid data.
-- `src/data/levels.js`: puzzle definitions and piece definitions.
+- `src/data/pieces/`: canonical runtime piece library.
+- `src/data/levels/`: folder-based handcrafted level content organized by set.
 - `src/utils/grid.js`: placement, collision, occupancy, and rotation helpers.
 - `src/index.css`: primary styling surface.
 
