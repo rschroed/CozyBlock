@@ -1,0 +1,37 @@
+name: Feature
+description: Request or define a new capability or UX improvement
+title: "[Feature]: "
+labels:
+  - feature
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should this feature enable?
+      placeholder: Add a lightweight hint state to show valid placements while dragging.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Define the minimum outcome for this feature.
+      placeholder: |
+        - Hint state appears only while dragging
+        - It does not change placement logic
+        - It works on touch and desktop
+    validations:
+      required: true
+  - type: textarea
+    id: references
+    attributes:
+      label: Relevant links or references
+      description: Add Figma links, screenshots, playtest notes, or related issues.
+      placeholder: Figma node, screenshot, playtest observation, or related issue
+  - type: textarea
+    id: testing
+    attributes:
+      label: Testing notes
+      description: Explain how to validate the feature.
+      placeholder: Run npm run build and verify the flow in the browser.
