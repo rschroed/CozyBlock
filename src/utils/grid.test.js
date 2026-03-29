@@ -11,9 +11,9 @@ import {
   rotateShape,
 } from './grid';
 
-const T_PIECE = PIECE_LIBRARY[PIECE_IDS.T];
-const SQUARE_PIECE = PIECE_LIBRARY[PIECE_IDS.SQUARE];
-const LINE_PIECE = PIECE_LIBRARY[PIECE_IDS.LINE];
+const T_PIECE = PIECE_LIBRARY[PIECE_IDS.T4];
+const SQUARE_PIECE = PIECE_LIBRARY[PIECE_IDS.SQUARE2];
+const LINE_PIECE = PIECE_LIBRARY[PIECE_IDS.LINE3];
 
 describe('grid utilities', () => {
   describe('normalizeRotation', () => {
@@ -54,7 +54,7 @@ describe('grid utilities', () => {
         [1, 1, 1],
       ];
       const placedPieces = {
-        [PIECE_IDS.SQUARE]: { x: 0, y: 0, rotation: 0 },
+        [PIECE_IDS.SQUARE2]: { x: 0, y: 0, rotation: 0 },
       };
 
       expect(canPlacePiece(board, PIECES, placedPieces, T_PIECE, 0, 0)).toBe(false);
@@ -91,19 +91,19 @@ describe('grid utilities', () => {
 
   describe('placePiece and removePiece', () => {
     it('stores normalized rotation when placing a piece', () => {
-      expect(placePiece({}, PIECE_IDS.T, 1, 2, -1)).toEqual({
-        [PIECE_IDS.T]: { x: 1, y: 2, rotation: 3 },
+      expect(placePiece({}, PIECE_IDS.T4, 1, 2, -1)).toEqual({
+        [PIECE_IDS.T4]: { x: 1, y: 2, rotation: 3 },
       });
     });
 
     it('removes only the targeted piece', () => {
       const placedPieces = {
-        [PIECE_IDS.T]: { x: 0, y: 0, rotation: 0 },
-        [PIECE_IDS.SQUARE]: { x: 1, y: 1, rotation: 0 },
+        [PIECE_IDS.T4]: { x: 0, y: 0, rotation: 0 },
+        [PIECE_IDS.SQUARE2]: { x: 1, y: 1, rotation: 0 },
       };
 
-      expect(removePiece(placedPieces, PIECE_IDS.T)).toEqual({
-        [PIECE_IDS.SQUARE]: { x: 1, y: 1, rotation: 0 },
+      expect(removePiece(placedPieces, PIECE_IDS.T4)).toEqual({
+        [PIECE_IDS.SQUARE2]: { x: 1, y: 1, rotation: 0 },
       });
     });
   });
@@ -115,7 +115,7 @@ describe('grid utilities', () => {
         [1, 1, 1],
       ];
       const placedPieces = {
-        [PIECE_IDS.SQUARE]: { x: 0, y: 0, rotation: 0 },
+        [PIECE_IDS.SQUARE2]: { x: 0, y: 0, rotation: 0 },
       };
       const occupancyMap = buildOccupancyMap(board, PIECES, placedPieces);
 
@@ -128,7 +128,7 @@ describe('grid utilities', () => {
         [1, 1],
       ];
       const placedPieces = {
-        [PIECE_IDS.SQUARE]: { x: 0, y: 0, rotation: 0 },
+        [PIECE_IDS.SQUARE2]: { x: 0, y: 0, rotation: 0 },
       };
       const occupancyMap = buildOccupancyMap(board, PIECES, placedPieces);
 
