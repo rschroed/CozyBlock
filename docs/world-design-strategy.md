@@ -120,7 +120,7 @@ This structure is a guideline, not a strict requirement.
 | 9 | Space gets crowded | - | same | medium, compact | immediate | density, limited options |
 | 10 | Some pieces dominate | p5 | + p5 | medium | immediate | large pieces shape the board |
 | 11 | Build around a center | cross5 | + cross5 | medium, central layouts | immediate | anchor-based solving |
-| 12 | You must think ahead | - | same | medium -> large | mid-world escalation | sequencing, fail-late puzzles |
+| 12 | You must think ahead | - | same | medium -> large | mid-world escalation | sequencing, visible downstream pressure |
 | 13 | Length creates commitment | longL5 | + longL5 | large, corridors | immediate | long dependencies |
 | 14 | Space isn't always solid | u5 | + u5 | large, holes/pockets | immediate | negative space reasoning |
 | 15 | Break the rules (optional) | single1 | + single1 (limited) | varied | immediate | final-move logic, cleanup |
