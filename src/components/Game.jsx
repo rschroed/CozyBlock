@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createLevelPieceInstances, LEVELS } from '../data/levels';
+import { getLevelNavigation, getLevelPickerSections } from '../data/levels/navigation';
 import {
   buildOccupancyMap,
   canPlacePiece,
@@ -41,6 +42,8 @@ function Game() {
     typeof window === 'undefined' ? 1024 : window.innerWidth,
   );
   const currentLevel = LEVELS[levelIndex];
+  const navigation = useMemo(() => getLevelNavigation(levelIndex), [levelIndex]);
+  const pickerSections = useMemo(() => getLevelPickerSections(), []);
   const currentLevelPieces = useMemo(() => createLevelPieceInstances(currentLevel), [currentLevel]);
   const pieceMap = useMemo(
     () => Object.fromEntries(currentLevelPieces.map((piece) => [piece.id, piece])),
@@ -364,7 +367,7 @@ function Game() {
   });
 
   const hasAnyPlacedPieces = Object.keys(placedPieces).length > 0;
-  const hasNextPuzzle = levelIndex < LEVELS.length - 1;
+  const hasNextPuzzle = navigation?.nextLevelIndex !== null;
   const isRotateActive = Boolean(selectedPieceId || dragState?.pieceId) && !isComplete;
 
   const trayPieces = currentLevelPieces.filter(
@@ -378,7 +381,10 @@ function Game() {
           <div className="game-copy">
             <h1>Cozy Block Prototype</h1>
             <button className="puzzle-trigger" onClick={() => setIsLevelPickerOpen(true)} type="button">
-              Puzzle {levelIndex + 1} of {LEVELS.length}: {currentLevel.name}
+              <span className="puzzle-trigger-set">{navigation.setName}</span>
+              <span className="puzzle-trigger-level">
+                Puzzle {navigation.localLevelNumber} of {navigation.localLevelCount}: {currentLevel.name}
+              </span>
             </button>
           </div>
 
@@ -448,22 +454,36 @@ function Game() {
             <div className="completion-overlay">
               <div className="completion-badge">Yay!</div>
               <div className="completion-copy">
-                You completed
-                <br />
-                Puzzle {levelIndex + 1} of {LEVELS.length}:
-                <br />
-                {currentLevel.name}
+                {navigation.crossesIntoNextSet ? (
+                  <>
+                    You finished
+                    <br />
+                    {navigation.setName}
+                  </>
+                ) : (
+                  <>
+                    You completed
+                    <br />
+                    {navigation.setName}
+                    <br />
+                    Puzzle {navigation.localLevelNumber} of {navigation.localLevelCount}:
+                    <br />
+                    {currentLevel.name}
+                  </>
+                )}
               </div>
               {hasNextPuzzle ? (
                 <button
                   className="completion-next"
-                  onClick={() => goToLevel(levelIndex + 1)}
+                  onClick={() => goToLevel(navigation.nextLevelIndex)}
                   type="button"
                 >
-                  Play the next puzzle
+                  {navigation.crossesIntoNextSet
+                    ? `Start ${navigation.nextSet.name}`
+                    : 'Play the next puzzle'}
                 </button>
               ) : (
-                <div className="completion-done">You finished all puzzles.</div>
+                <div className="completion-done">You finished all worlds.</div>
               )}
             </div>
           ) : null}
@@ -503,17 +523,27 @@ function Game() {
                 Close
               </button>
             </div>
-            <div className="picker-grid">
-              {LEVELS.map((level, index) => (
-                <button
-                  className={index === levelIndex ? 'active' : ''}
-                  key={level.id}
-                  onClick={() => goToLevel(index)}
-                  type="button"
-                >
-                  <span>{index + 1}</span>
-                  <span>{level.name}</span>
-                </button>
+            <div className="picker-sections">
+              {pickerSections.map((section) => (
+                <section className="picker-section" key={section.setId}>
+                  <div className="picker-section-header">
+                    <strong>{section.setName}</strong>
+                    <span>{section.levels.length} puzzles</span>
+                  </div>
+                  <div className="picker-grid">
+                    {section.levels.map(({ level, levelIndex: sectionLevelIndex, localLevelNumber }) => (
+                      <button
+                        className={sectionLevelIndex === levelIndex ? 'active' : ''}
+                        key={level.id}
+                        onClick={() => goToLevel(sectionLevelIndex)}
+                        type="button"
+                      >
+                        <span>Puzzle {localLevelNumber}</span>
+                        <span>{level.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
               ))}
             </div>
           </div>
