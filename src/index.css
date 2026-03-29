@@ -97,10 +97,27 @@ button {
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .puzzle-trigger:hover {
   color: #143c6f;
+}
+
+.puzzle-trigger-set {
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.puzzle-trigger-level {
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.2;
 }
 
 .puzzle-trigger:focus-visible,
@@ -254,6 +271,7 @@ button {
 
 .picker-dialog {
   width: min(100%, 392px);
+  max-height: min(82vh, 720px);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -282,6 +300,38 @@ button {
   border-radius: 12px;
   background: var(--panel-surface);
   color: var(--text);
+}
+
+.picker-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.picker-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.picker-section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-inline: 2px;
+}
+
+.picker-section-header strong {
+  font-size: 0.9rem;
+}
+
+.picker-section-header span {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-muted);
 }
 
 .picker-grid {
