@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { LEVELS, PIECES } from '../data/levels';
+import { LEVELS } from '../data/levels';
+import { PIECE_LIBRARY } from '../data/pieces';
 import {
   buildOccupancyMap,
   canPlacePiece,
@@ -14,8 +15,12 @@ const DESKTOP_CELL_SIZE = 52;
 const CARD_MAX_WIDTH = 392;
 const BOARD_HORIZONTAL_PADDING = 56;
 
-function createInitialTrayRotations(pieces) {
-  return Object.fromEntries(pieces.map((piece) => [piece.id, 0]));
+function createInitialTrayRotations(pieceIds) {
+  return Object.fromEntries(pieceIds.map((pieceId) => [pieceId, 0]));
+}
+
+function getLevelPieces(level) {
+  return level.pieceIds.map((pieceId) => PIECE_LIBRARY[pieceId]).filter(Boolean);
 }
 
 function Game() {
@@ -27,7 +32,9 @@ function Game() {
   const cellSizeRef = useRef(DESKTOP_CELL_SIZE);
   const [levelIndex, setLevelIndex] = useState(0);
   const [placedPieces, setPlacedPieces] = useState({});
-  const [trayRotations, setTrayRotations] = useState(createInitialTrayRotations(PIECES));
+  const [trayRotations, setTrayRotations] = useState(
+    createInitialTrayRotations(LEVELS[0].pieceIds),
+  );
   const [selectedPieceId, setSelectedPieceId] = useState(null);
   const [dragState, setDragState] = useState(null);
   const [isLevelPickerOpen, setIsLevelPickerOpen] = useState(false);
@@ -35,7 +42,8 @@ function Game() {
     typeof window === 'undefined' ? 1024 : window.innerWidth,
   );
   const currentLevel = LEVELS[levelIndex];
-  const pieceMap = useMemo(() => Object.fromEntries(PIECES.map((piece) => [piece.id, piece])), []);
+  const currentLevelPieces = useMemo(() => getLevelPieces(currentLevel), [currentLevel]);
+  const pieceMap = PIECE_LIBRARY;
   const boardColumnCount = Math.max(...currentLevel.board.map((row) => row.length));
   const availableBoardWidth =
     Math.min(CARD_MAX_WIDTH, Math.max(320, viewportWidth - 28)) - BOARD_HORIZONTAL_PADDING;
@@ -70,8 +78,8 @@ function Game() {
   }, []);
 
   const occupancyMap = useMemo(
-    () => buildOccupancyMap(currentLevel.board, PIECES, placedPieces),
-    [currentLevel.board, placedPieces],
+    () => buildOccupancyMap(currentLevel.board, currentLevelPieces, placedPieces),
+    [currentLevel.board, currentLevelPieces, placedPieces],
   );
   const isComplete = isBoardComplete(currentLevel.board, occupancyMap);
 
@@ -94,7 +102,7 @@ function Game() {
     const snappedY = Math.round((pointer.y - boardRect.top - grabOffset.y) / activeCellSize);
     const isValid = canPlacePiece(
       currentLevelRef.current.board,
-      PIECES,
+      getLevelPieces(currentLevelRef.current),
       placedPiecesRef.current,
       pieceMap[pieceId],
       snappedX,
@@ -158,10 +166,10 @@ function Game() {
     updateDragState(nextDragState);
   };
 
-  const resetLevelState = () => {
+  const resetLevelState = (level = currentLevelRef.current) => {
     updateDragState(null);
     setPlacedPieces({});
-    setTrayRotations(createInitialTrayRotations(PIECES));
+    setTrayRotations(createInitialTrayRotations(level.pieceIds));
     setSelectedPieceId(null);
   };
 
@@ -231,7 +239,7 @@ function Game() {
       const nextRotation = normalizeRotation(currentPlacement.rotation + 1);
       const canRotateInPlace = canPlacePiece(
         currentLevel.board,
-        PIECES,
+        currentLevelPieces,
         placedPiecesRef.current,
         pieceMap[selectedPieceId],
         currentPlacement.x,
@@ -277,7 +285,7 @@ function Game() {
   };
 
   const goToLevel = (nextIndex) => {
-    resetLevelState();
+    resetLevelState(LEVELS[nextIndex]);
     setLevelIndex(nextIndex);
     setIsLevelPickerOpen(false);
   };
@@ -348,7 +356,7 @@ function Game() {
   const hasNextPuzzle = levelIndex < LEVELS.length - 1;
   const isRotateActive = Boolean(selectedPieceId || dragState?.pieceId) && !isComplete;
 
-  const trayPieces = PIECES.filter(
+  const trayPieces = currentLevelPieces.filter(
     (piece) => !placedPieces[piece.id] && dragState?.pieceId !== piece.id,
   );
 
