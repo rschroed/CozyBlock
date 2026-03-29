@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { LEVELS, LEVEL_SETS } from './index';
-import { PIECE_LIBRARY } from '../pieces';
+import { createLevelPieceInstances, LEVELS, LEVEL_SETS } from './index';
+import { PIECE_IDS, PIECE_LIBRARY } from '../pieces';
+import { canPlacePiece, placePiece, rotateShape } from '../../utils/grid';
 
 function countPlayableCells(board) {
   return board.flat().filter((cell) => cell === 1).length;
@@ -9,6 +10,65 @@ function countPlayableCells(board) {
 function countPieceArea(pieceId) {
   const piece = PIECE_LIBRARY[pieceId];
   return piece.shape.flat().filter(Boolean).length;
+}
+
+function getLevelWorldId(level) {
+  return level.id.split('-').slice(0, 2).join('-');
+}
+
+function getDistinctRotations(shape) {
+  const rotations = [];
+  const seen = new Set();
+
+  for (let rotation = 0; rotation < 4; rotation += 1) {
+    const rotatedShape = rotateShape(shape, rotation);
+    const key = JSON.stringify(rotatedShape);
+
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    rotations.push(rotation);
+  }
+
+  return rotations;
+}
+
+function solveLevel(level) {
+  const pieces = createLevelPieceInstances(level);
+  const solutions = [];
+  const rowCount = level.board.length;
+  const columnCount = Math.max(...level.board.map((row) => row.length));
+
+  function search(index, placedPieces) {
+    if (index === pieces.length) {
+      solutions.push(placedPieces);
+      return;
+    }
+
+    const piece = pieces[index];
+    const rotations = getDistinctRotations(piece.shape);
+
+    rotations.forEach((rotation) => {
+      const rotatedShape = rotateShape(piece.shape, rotation);
+      const shapeHeight = rotatedShape.length;
+      const shapeWidth = rotatedShape[0].length;
+
+      for (let y = 0; y <= rowCount - shapeHeight; y += 1) {
+        for (let x = 0; x <= columnCount - shapeWidth; x += 1) {
+          if (!canPlacePiece(level.board, pieces, placedPieces, piece, x, y, rotation)) {
+            continue;
+          }
+
+          search(index + 1, placePiece(placedPieces, piece.id, x, y, rotation));
+        }
+      }
+    });
+  }
+
+  search(0, {});
+  return solutions;
 }
 
 describe('level content validation', () => {
@@ -82,9 +142,21 @@ describe('level content validation', () => {
       });
     });
 
-    it('does not repeat piece ids within a level', () => {
+    it('only repeats square2 within world 0 levels', () => {
       LEVELS.forEach((level) => {
-        expect(new Set(level.pieceIds).size).toBe(level.pieceIds.length);
+        const pieceCounts = level.pieceIds.reduce((counts, pieceId) => {
+          counts[pieceId] = (counts[pieceId] ?? 0) + 1;
+          return counts;
+        }, {});
+
+        Object.entries(pieceCounts).forEach(([pieceId, count]) => {
+          if (count === 1) {
+            return;
+          }
+
+          expect(getLevelWorldId(level)).toBe('world-0');
+          expect(pieceId).toBe(PIECE_IDS.SQUARE2);
+        });
       });
     });
   });
@@ -96,6 +168,61 @@ describe('level content validation', () => {
         const pieceArea = level.pieceIds.reduce((total, pieceId) => total + countPieceArea(pieceId), 0);
 
         expect(boardArea).toBe(pieceArea);
+      });
+    });
+  });
+
+  describe('world pacing rules', () => {
+    it('ships the expected world counts for the first content wave', () => {
+      expect(LEVEL_SETS.map((set) => [set.id, set.levels.length])).toEqual([
+        ['world-0', 4],
+        ['world-1', 8],
+        ['world-2', 8],
+      ]);
+    });
+
+    it('keeps world 0 limited to repeated square2 pieces', () => {
+      const world0Levels = LEVELS.filter((level) => getLevelWorldId(level) === 'world-0');
+
+      world0Levels.forEach((level) => {
+        expect(level.pieceIds.every((pieceId) => pieceId === PIECE_IDS.SQUARE2)).toBe(true);
+      });
+    });
+
+    it('keeps world 1 limited to shape variety without requiring rotation', () => {
+      const allowedPieces = [PIECE_IDS.SQUARE2, PIECE_IDS.LINE3, PIECE_IDS.L3];
+      const world1Levels = LEVELS.filter((level) => getLevelWorldId(level) === 'world-1');
+
+      world1Levels.forEach((level) => {
+        expect(level.pieceIds).toEqual(allowedPieces);
+
+        const solutions = solveLevel(level);
+        expect(solutions.length).toBeGreaterThan(0);
+
+        const hasNoRotationSolution = solutions.some((solution) =>
+          Object.values(solution).every((placement) => placement.rotation === 0),
+        );
+
+        expect(hasNoRotationSolution).toBe(true);
+      });
+    });
+
+    it('makes world 2 require a rotated t4 placement', () => {
+      const allowedPieces = [PIECE_IDS.SQUARE2, PIECE_IDS.LINE3, PIECE_IDS.L3, PIECE_IDS.T4];
+      const world2Levels = LEVELS.filter((level) => getLevelWorldId(level) === 'world-2');
+
+      world2Levels.forEach((level) => {
+        expect(level.pieceIds).toEqual(allowedPieces);
+
+        const solutions = solveLevel(level);
+        expect(solutions.length).toBeGreaterThan(0);
+
+        const allSolutionsRotateT4 = solutions.every((solution) => {
+          const t4Entry = Object.entries(solution).find(([pieceId]) => pieceId.startsWith(`${PIECE_IDS.T4}:`));
+          return t4Entry?.[1].rotation !== 0;
+        });
+
+        expect(allSolutionsRotateT4).toBe(true);
       });
     });
   });
