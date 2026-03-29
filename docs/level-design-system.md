@@ -36,6 +36,30 @@ A good level has one dominant constraint.
 
 ---
 
+## Board Density & Shape
+
+Board shape should prioritize internal structure over external silhouette.
+
+Favor compact, clustered boards whose interesting decisions come from internal irregularities rather than obvious outer contours.
+
+### Guidelines
+
+- Prefer compact, clustered shapes over long arms or branch-like extensions
+- Use protrusions sparingly; avoid letting them define the intended placement
+- Create interest through internal irregularities such as small notches, steps, and partial rows
+- Ensure most meaningful decisions happen within the board, not only at its perimeter
+- Include at least one area where more than one placement appears reasonable before other constraints resolve the choice
+
+### Anti-pattern
+
+Avoid boards where the primary solve is matching pieces to obvious silhouette-based slots.
+
+### Heuristic
+
+If the main way to solve the puzzle is matching pieces to obvious outer shapes, the board is too silhouette-driven.
+
+---
+
 ## Puzzle Archetypes
 
 Archetypes describe the pattern of challenge in a level.
