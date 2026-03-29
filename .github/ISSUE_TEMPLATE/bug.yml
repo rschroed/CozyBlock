@@ -1,0 +1,36 @@
+name: Bug
+description: Report a broken behavior or regression
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is broken?
+      description: Describe the bug or regression clearly.
+      placeholder: Pieces can overlap after rotating near the board edge.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List the conditions that will make this issue complete.
+      placeholder: |
+        - Pieces cannot overlap after rotation
+        - Behavior is consistent on touch and mouse
+    validations:
+      required: true
+  - type: textarea
+    id: references
+    attributes:
+      label: Relevant links or references
+      description: Add screenshots, Figma links, deployed URLs, or related issues.
+      placeholder: Figma node, deployed page, screenshot, or issue link
+  - type: textarea
+    id: testing
+    attributes:
+      label: Testing notes
+      description: Explain how this should be verified.
+      placeholder: Test on mobile Safari and desktop Chrome. Run npm run build.
