@@ -19,7 +19,21 @@ function createInitialTrayRotations(levelPieces) {
   return Object.fromEntries(levelPieces.map((piece) => [piece.id, 0]));
 }
 
+function createBlockedModalState(target, source) {
+  if (!target || target.blockedAction === 'none') {
+    return null;
+  }
+
+  return {
+    targetSetId: target.setId,
+    targetSetName: target.setName,
+    source,
+    action: target.blockedAction,
+  };
+}
+
 function Game() {
+  const hasPremium = false;
   const boardRef = useRef(null);
   const trayRef = useRef(null);
   const dragStateRef = useRef(null);
@@ -38,12 +52,16 @@ function Game() {
   const [selectedPieceId, setSelectedPieceId] = useState(null);
   const [dragState, setDragState] = useState(null);
   const [isLevelPickerOpen, setIsLevelPickerOpen] = useState(false);
+  const [blockedModalState, setBlockedModalState] = useState(null);
   const [viewportWidth, setViewportWidth] = useState(
     typeof window === 'undefined' ? 1024 : window.innerWidth,
   );
   const currentLevel = LEVELS[levelIndex];
-  const navigation = useMemo(() => getLevelNavigation(levelIndex), [levelIndex]);
-  const pickerSections = useMemo(() => getLevelPickerSections(), []);
+  const navigation = useMemo(
+    () => getLevelNavigation(levelIndex, { hasPremium }),
+    [hasPremium, levelIndex],
+  );
+  const pickerSections = useMemo(() => getLevelPickerSections({ hasPremium }), [hasPremium]);
   const currentLevelPieces = useMemo(() => createLevelPieceInstances(currentLevel), [currentLevel]);
   const pieceMap = useMemo(
     () => Object.fromEntries(currentLevelPieces.map((piece) => [piece.id, piece])),
@@ -302,6 +320,56 @@ function Game() {
     resetLevelState(LEVELS[nextIndex]);
     setLevelIndex(nextIndex);
     setIsLevelPickerOpen(false);
+    setBlockedModalState(null);
+  };
+
+  const openBlockedModal = (target, source) => {
+    const nextBlockedModalState = createBlockedModalState(target, source);
+
+    if (!nextBlockedModalState) {
+      return;
+    }
+
+    setIsLevelPickerOpen(false);
+    setBlockedModalState(nextBlockedModalState);
+  };
+
+  const closeBlockedModal = () => {
+    setBlockedModalState(null);
+  };
+
+  const showRestorePlaceholder = () => {
+    setBlockedModalState((currentBlockedModalState) =>
+      currentBlockedModalState ? { ...currentBlockedModalState, action: 'show_restore' } : null,
+    );
+  };
+
+  const showPurchasePlaceholder = () => {
+    setBlockedModalState((currentBlockedModalState) =>
+      currentBlockedModalState ? { ...currentBlockedModalState, action: 'show_purchase' } : null,
+    );
+  };
+
+  const handleLevelPickerSelection = (level) => {
+    if (!level.isAccessible) {
+      openBlockedModal(level, 'picker');
+      return;
+    }
+
+    goToLevel(level.levelIndex);
+  };
+
+  const handleNextPuzzle = () => {
+    if (!navigation?.nextTarget) {
+      return;
+    }
+
+    if (!navigation.nextTarget.isAccessible) {
+      openBlockedModal(navigation.nextTarget, 'next_level');
+      return;
+    }
+
+    goToLevel(navigation.nextTarget.levelIndex);
   };
 
   useEffect(() => {
@@ -350,6 +418,11 @@ function Game() {
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
+        if (blockedModalState) {
+          closeBlockedModal();
+          return;
+        }
+
         setIsLevelPickerOpen(false);
         return;
       }
@@ -364,10 +437,10 @@ function Game() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  });
+  }, [blockedModalState]);
 
   const hasAnyPlacedPieces = Object.keys(placedPieces).length > 0;
-  const hasNextPuzzle = navigation?.nextLevelIndex !== null;
+  const hasNextPuzzle = navigation?.nextTarget !== null;
   const isRotateActive = Boolean(selectedPieceId || dragState?.pieceId) && !isComplete;
 
   const trayPieces = currentLevelPieces.filter(
@@ -475,7 +548,7 @@ function Game() {
               {hasNextPuzzle ? (
                 <button
                   className="completion-next"
-                  onClick={() => goToLevel(navigation.nextLevelIndex)}
+                  onClick={handleNextPuzzle}
                   type="button"
                 >
                   {navigation.crossesIntoNextSet
@@ -531,21 +604,81 @@ function Game() {
                     <span>{section.levels.length} puzzles</span>
                   </div>
                   <div className="picker-grid">
-                    {section.levels.map(({ level, levelIndex: sectionLevelIndex, localLevelNumber }) => (
+                    {section.levels.map((level) => (
                       <button
-                        className={sectionLevelIndex === levelIndex ? 'active' : ''}
-                        key={level.id}
-                        onClick={() => goToLevel(sectionLevelIndex)}
+                        aria-disabled={!level.isAccessible}
+                        className={[
+                          level.levelIndex === levelIndex ? 'active' : '',
+                          !level.isAccessible ? 'is-locked' : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' ')}
+                        key={level.level.id}
+                        onClick={() => handleLevelPickerSelection(level)}
                         type="button"
                       >
-                        <span>Puzzle {localLevelNumber}</span>
-                        <span>{level.name}</span>
+                        <span className="picker-grid-meta">
+                          <span>Puzzle {level.localLevelNumber}</span>
+                          {!level.isAccessible ? (
+                            <span className="picker-premium-badge">Premium</span>
+                          ) : null}
+                        </span>
+                        <span>{level.level.name}</span>
                       </button>
                     ))}
                   </div>
                 </section>
               ))}
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {blockedModalState ? (
+        <div className="picker-backdrop" onClick={closeBlockedModal} role="presentation">
+          <div
+            aria-label="Premium content locked"
+            aria-modal="true"
+            className="blocked-dialog"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+          >
+            <div className="picker-header">
+              <div>
+                <strong>Premium Content</strong>
+              </div>
+              <button onClick={closeBlockedModal} type="button">
+                Close
+              </button>
+            </div>
+
+            {blockedModalState.action === 'show_restore' ? (
+              <div className="blocked-dialog-body">
+                <p className="blocked-dialog-copy">
+                  Restore for {blockedModalState.targetSetName} is coming next. This placeholder
+                  confirms the locked flow without wiring the real restore form yet.
+                </p>
+                <button className="blocked-dialog-primary" onClick={showPurchasePlaceholder} type="button">
+                  Back to premium details
+                </button>
+              </div>
+            ) : (
+              <div className="blocked-dialog-body">
+                <div className="blocked-dialog-kicker">
+                  {blockedModalState.source === 'next_level' ? 'Next world locked' : 'Locked from picker'}
+                </div>
+                <p className="blocked-dialog-copy">
+                  {blockedModalState.targetSetName} is premium content. Buying and restore are not wired in
+                  yet, but this placeholder blocks entry and keeps the locked-state behavior visible.
+                </p>
+                <button className="blocked-dialog-primary" type="button">
+                  Buy placeholder
+                </button>
+                <button className="blocked-dialog-secondary" onClick={showRestorePlaceholder} type="button">
+                  Restore placeholder
+                </button>
+              </div>
+            )}
           </div>
         </div>
       ) : null}
