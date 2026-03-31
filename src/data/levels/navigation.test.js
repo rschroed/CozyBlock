@@ -7,6 +7,9 @@ describe('level navigation helpers', () => {
       expect(getLevelNavigation(0)).toMatchObject({
         setId: 'world-0',
         setName: 'World 0',
+        access: 'free',
+        isAccessible: true,
+        blockedAction: 'none',
         localLevelIndex: 0,
         localLevelNumber: 1,
         localLevelCount: 1,
@@ -16,6 +19,9 @@ describe('level navigation helpers', () => {
       expect(getLevelNavigation(1)).toMatchObject({
         setId: 'world-1',
         setName: 'World 1',
+        access: 'free',
+        isAccessible: true,
+        blockedAction: 'none',
         localLevelIndex: 0,
         localLevelNumber: 1,
         localLevelCount: 8,
@@ -25,6 +31,9 @@ describe('level navigation helpers', () => {
       expect(getLevelNavigation(9)).toMatchObject({
         setId: 'world-2',
         setName: 'World 2',
+        access: 'premium',
+        isAccessible: false,
+        blockedAction: 'show_purchase',
         localLevelIndex: 0,
         localLevelNumber: 1,
         localLevelCount: 8,
@@ -59,6 +68,23 @@ describe('level navigation helpers', () => {
       });
     });
 
+    it('reports blocked next-target metadata when a free player reaches premium content', () => {
+      expect(getLevelNavigation(8)).toMatchObject({
+        setId: 'world-1',
+        setName: 'World 1',
+        crossesIntoNextSet: true,
+      });
+
+      expect(getLevelNavigation(8)?.nextTarget).toMatchObject({
+        levelIndex: 9,
+        setId: 'world-2',
+        setName: 'World 2',
+        access: 'premium',
+        isAccessible: false,
+        blockedAction: 'show_purchase',
+      });
+    });
+
     it('reports no next set at the last level of the final set', () => {
       expect(getLevelNavigation(16)).toMatchObject({
         setId: 'world-2',
@@ -68,6 +94,22 @@ describe('level navigation helpers', () => {
         crossesIntoNextSet: false,
         nextLevelIndex: null,
         nextSet: null,
+      });
+    });
+
+    it('reports premium worlds as accessible for premium players', () => {
+      expect(getLevelNavigation(9, { hasPremium: true })).toMatchObject({
+        setId: 'world-2',
+        access: 'premium',
+        isAccessible: true,
+        blockedAction: 'none',
+      });
+
+      expect(getLevelNavigation(8, { hasPremium: true })?.nextTarget).toMatchObject({
+        levelIndex: 9,
+        setId: 'world-2',
+        isAccessible: true,
+        blockedAction: 'none',
       });
     });
   });
@@ -106,6 +148,46 @@ describe('level navigation helpers', () => {
           ],
         },
       ]);
+    });
+
+    it('marks premium sections and levels as inaccessible for free players', () => {
+      const premiumSection = getLevelPickerSections().find((section) => section.setId === 'world-2');
+
+      expect(premiumSection).toMatchObject({
+        setId: 'world-2',
+        access: 'premium',
+        isAccessible: false,
+        blockedAction: 'show_purchase',
+      });
+
+      expect(premiumSection?.levels[0]).toMatchObject({
+        levelIndex: 9,
+        setId: 'world-2',
+        setName: 'World 2',
+        access: 'premium',
+        isAccessible: false,
+        blockedAction: 'show_purchase',
+      });
+    });
+
+    it('marks premium sections and levels as accessible for premium players', () => {
+      const premiumSection = getLevelPickerSections({ hasPremium: true }).find(
+        (section) => section.setId === 'world-2',
+      );
+
+      expect(premiumSection).toMatchObject({
+        setId: 'world-2',
+        access: 'premium',
+        isAccessible: true,
+        blockedAction: 'none',
+      });
+
+      expect(premiumSection?.levels[0]).toMatchObject({
+        levelIndex: 9,
+        access: 'premium',
+        isAccessible: true,
+        blockedAction: 'none',
+      });
     });
   });
 });
