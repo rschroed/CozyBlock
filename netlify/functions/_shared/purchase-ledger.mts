@@ -52,15 +52,38 @@ export async function findPurchaseByRestoreCode(restoreCode, store = getPurchase
   return (await store.get(getRestoreCodeKey(restoreCode), { type: 'json' })) ?? null;
 }
 
-export async function createPurchaseRecord(
+async function ensureRestoreIndex(record, store) {
+  const indexedRecord = await findPurchaseByRestoreCode(record.restore_code, store);
+
+  if (!indexedRecord) {
+    await store.setJSON(getRestoreCodeKey(record.restore_code), record);
+    return {
+      repaired: true,
+    };
+  }
+
+  if (indexedRecord.sale_id !== record.sale_id || indexedRecord.product_id !== record.product_id) {
+    throw new Error(`restore_code_collision:${record.restore_code}`);
+  }
+
+  return {
+    repaired: false,
+  };
+}
+
+export async function ensurePurchaseRecord(
   { sale_id, product_id, created_at },
   store = getPurchaseLedgerStore(),
 ) {
+  const restore_code = createRestoreCode({ sale_id, product_id });
   const existingRecord = await findPurchaseBySaleId(sale_id, store);
 
   if (existingRecord) {
+    const { repaired } = await ensureRestoreIndex(existingRecord, store);
+
     return {
       created: false,
+      repaired,
       record: existingRecord,
     };
   }
@@ -68,15 +91,16 @@ export async function createPurchaseRecord(
   const record = {
     sale_id,
     product_id,
-    restore_code: createRestoreCode({ sale_id, product_id }),
+    restore_code,
     created_at,
   };
 
-  await store.setJSON(getSaleKey(sale_id), record);
   await store.setJSON(getRestoreCodeKey(record.restore_code), record);
+  await store.setJSON(getSaleKey(sale_id), record);
 
   return {
     created: true,
+    repaired: false,
     record,
   };
 }

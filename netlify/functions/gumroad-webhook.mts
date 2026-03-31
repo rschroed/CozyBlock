@@ -1,5 +1,5 @@
 import type { Context } from '@netlify/functions';
-import { createPurchaseRecord, findPurchaseBySaleId } from './_shared/purchase-ledger.mts';
+import { ensurePurchaseRecord } from './_shared/purchase-ledger.mts';
 
 function jsonResponse(payload, status = 200) {
   return new Response(JSON.stringify(payload), {
@@ -47,13 +47,15 @@ async function readIncomingValues(request) {
 
 export function normalizeGumroadSale(values) {
   const saleId = getFirstString(values, ['sale_id', 'saleId', 'id']);
-  const productId = getFirstString(values, ['product_id', 'productId', 'permalink']);
+  const productId = getFirstString(values, ['product_id', 'productId']);
+  const productPermalink = getFirstString(values, ['product_permalink', 'productPermalink', 'permalink']);
   const createdAt = getFirstString(values, ['sale_timestamp', 'created_at', 'createdAt']);
   const resourceName = getFirstString(values, ['resource_name', 'resourceName']);
 
   return {
     saleId,
     productId,
+    productPermalink,
     createdAt,
     resourceName,
     isTest: normalizeBoolean(values.test),
@@ -65,8 +67,8 @@ export function normalizeGumroadSale(values) {
 
 export function createGumroadWebhookHandler({
   getConfiguredProductId,
-  lookupSale = findPurchaseBySaleId,
-  createRecord = createPurchaseRecord,
+  getConfiguredProductPermalink = () => null,
+  ensureRecord = ensurePurchaseRecord,
   logger = console,
 }) {
   return async function gumroadWebhook(request) {
@@ -75,6 +77,7 @@ export function createGumroadWebhookHandler({
     }
 
     const configuredProductId = getConfiguredProductId();
+    const configuredProductPermalink = getConfiguredProductPermalink();
     if (!configuredProductId) {
       logger.error('Missing GUMROAD_PRODUCT_ID configuration.');
       return jsonResponse({ ok: false, error: 'server_misconfigured' }, 500);
@@ -104,6 +107,7 @@ export function createGumroadWebhookHandler({
         reason: 'test_event',
         saleId: sale.saleId,
         productId: sale.productId,
+        productPermalink: sale.productPermalink,
       });
     }
 
@@ -114,6 +118,18 @@ export function createGumroadWebhookHandler({
         reason: 'wrong_product',
         saleId: sale.saleId,
         productId: sale.productId,
+        productPermalink: sale.productPermalink,
+      });
+    }
+
+    if (configuredProductPermalink && sale.productPermalink && sale.productPermalink !== configuredProductPermalink) {
+      return jsonResponse({
+        ok: true,
+        ignored: true,
+        reason: 'wrong_product_permalink',
+        saleId: sale.saleId,
+        productId: sale.productId,
+        productPermalink: sale.productPermalink,
       });
     }
 
@@ -121,6 +137,7 @@ export function createGumroadWebhookHandler({
       logger.warn('Gumroad webhook sale is not eligible for fulfillment.', {
         saleId: sale.saleId,
         productId: sale.productId,
+        productPermalink: sale.productPermalink,
         refunded: sale.isRefunded,
         disputed: sale.isDisputed,
       });
@@ -130,23 +147,14 @@ export function createGumroadWebhookHandler({
           error: 'sale_not_eligible',
           saleId: sale.saleId,
           productId: sale.productId,
+          productPermalink: sale.productPermalink,
         },
         400,
       );
     }
 
     try {
-      const existingRecord = await lookupSale(sale.saleId);
-      if (existingRecord) {
-        return jsonResponse({
-          ok: true,
-          duplicate: true,
-          saleId: existingRecord.sale_id,
-          productId: existingRecord.product_id,
-        });
-      }
-
-      const { record } = await createRecord({
+      const { created, repaired, record } = await ensureRecord({
         sale_id: sale.saleId,
         product_id: sale.productId,
         created_at: sale.createdAt,
@@ -154,9 +162,12 @@ export function createGumroadWebhookHandler({
 
       return jsonResponse({
         ok: true,
-        created: true,
+        created,
+        duplicate: !created,
+        repaired,
         saleId: record.sale_id,
         productId: record.product_id,
+        productPermalink: sale.productPermalink,
       });
     } catch (error) {
       logger.error('Failed to process Gumroad webhook.', error);
@@ -167,6 +178,7 @@ export function createGumroadWebhookHandler({
 
 const handler = createGumroadWebhookHandler({
   getConfiguredProductId: () => Netlify.env.get('GUMROAD_PRODUCT_ID'),
+  getConfiguredProductPermalink: () => Netlify.env.get('GUMROAD_PRODUCT_PERMALINK'),
 });
 
 export default async (request: Request, _context: Context) => handler(request);
