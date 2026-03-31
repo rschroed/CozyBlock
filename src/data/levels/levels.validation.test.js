@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createLevelPieceInstances, LEVELS, LEVEL_SETS } from './index';
+import { createLevelPieceInstances, LEVELS, LEVEL_ACCESS, LEVEL_SETS } from './index';
 import { PIECE_IDS, PIECE_LIBRARY } from '../pieces';
 import { canPlacePiece, placePiece, rotateShape } from '../../utils/grid';
 
@@ -73,7 +73,7 @@ function solveLevel(level) {
 
 describe('level content validation', () => {
   describe('set structure', () => {
-    it('defines sets with ids, names, and non-empty level arrays', () => {
+    it('defines sets with ids, names, access, and non-empty level arrays', () => {
       expect(LEVEL_SETS.length).toBeGreaterThan(0);
 
       LEVEL_SETS.forEach((set) => {
@@ -81,6 +81,7 @@ describe('level content validation', () => {
         expect(set.id.length).toBeGreaterThan(0);
         expect(typeof set.name).toBe('string');
         expect(set.name.length).toBeGreaterThan(0);
+        expect(Object.values(LEVEL_ACCESS)).toContain(set.access);
         expect(Array.isArray(set.levels)).toBe(true);
         expect(set.levels.length).toBeGreaterThan(0);
       });
@@ -155,6 +156,14 @@ describe('level content validation', () => {
   });
 
   describe('world pacing rules', () => {
+    it('ships the expected free and premium access split for the first content wave', () => {
+      expect(LEVEL_SETS.map((set) => [set.id, set.access])).toEqual([
+        ['world-0', LEVEL_ACCESS.FREE],
+        ['world-1', LEVEL_ACCESS.FREE],
+        ['world-2', LEVEL_ACCESS.PREMIUM],
+      ]);
+    });
+
     it('ships the expected world counts for the first content wave', () => {
       expect(LEVEL_SETS.map((set) => [set.id, set.levels.length])).toEqual([
         ['world-0', 1],

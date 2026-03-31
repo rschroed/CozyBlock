@@ -41,7 +41,7 @@ This repo uses a lean GitHub issue and branch workflow.
 5. Link the issue in the PR body and use a closing keyword such as `Closes #123`.
 6. Merge to `main` to trigger the Netlify production deploy.
 
-Netlify deploys `main` to production and automatically creates preview deploys for pull requests.
+Netlify deploys only `main` to production. Pull requests do not create Netlify preview deploys.
 
 Direct pushes to `main` are not the default path and should be reserved for true emergencies.
 

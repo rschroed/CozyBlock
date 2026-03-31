@@ -1,3 +1,4 @@
+import { LEVEL_ACCESS } from '../access';
 import centerPost from './05-center-post';
 import farCorner from './06-far-corner';
 import forkedPath from './04-forked-path';
@@ -21,6 +22,7 @@ const world1Levels = [
 export const WORLD_1_SET = {
   id: 'world-1',
   name: 'World 1',
+  access: LEVEL_ACCESS.FREE,
   levels: world1Levels,
 };
 
