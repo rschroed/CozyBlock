@@ -19,8 +19,8 @@ It exists to unblock:
 
 - Production app base URL: `https://playcozyblock.com`
 - Gumroad hosted product URL: `https://ryanschroeder.gumroad.com/l/tjkti`
-- Gumroad hosted link slug: `tjkti`
-- Gumroad product ID: `tjkti`
+- Gumroad hosted link slug / permalink: `tjkti`
+- Gumroad product ID: `EIMdnG5PO1Mswtbp0o8vUg==`
 - Purchase success redirect URL: `https://playcozyblock.com/premium/success`
 - Gumroad Ping/webhook URL: `https://playcozyblock.com/.netlify/functions/gumroad-webhook`
 
@@ -57,6 +57,15 @@ Downstream app work should assume:
 - Gumroad query parameters should be preserved on redirect
 - issue `#35` will read those query parameters and call the claim endpoint rather than inventing a separate success payload
 
+Observed success redirect on `2026-03-30`:
+
+`https://playcozyblock.com/premium/success?sale_id=9gT_oOaqbhTVw_9CHH-xJw%3D%3D&product_id=EIMdnG5PO1Mswtbp0o8vUg%3D%3D&product_permalink=tjkti`
+
+Observed query parameters:
+- `sale_id`
+- `product_id`
+- `product_permalink`
+
 If Gumroad offers multiple redirect settings, use the product-level setting that sends the buyer directly back to the CozyBlock app after checkout.
 
 ## Webhook Contract
@@ -69,7 +78,11 @@ Downstream backend work should treat `gumroad-webhook` as the stable function na
 
 ## Identifier Notes
 
-The public hosted link slug and Gumroad product ID are both confirmed as `tjkti`.
+Gumroad uses two distinct identifiers in CozyBlock's purchase flow:
+- public hosted link slug / permalink: `tjkti`
+- opaque Gumroad product ID: `EIMdnG5PO1Mswtbp0o8vUg==`
+
+These values are not interchangeable. Client and backend code should treat `product_id` and `product_permalink` as separate fields.
 
 ## Suggested Runtime Config Names
 
@@ -77,6 +90,7 @@ If later implementation work introduces env vars, prefer these names:
 - `VITE_GUMROAD_PRODUCT_URL`
 - `GUMROAD_WEBHOOK_URL`
 - `GUMROAD_PRODUCT_ID`
+- `GUMROAD_PRODUCT_PERMALINK`
 - `APP_BASE_URL`
 
 This issue does not wire those variables into runtime code; it only reserves clear names for later work.
@@ -89,8 +103,9 @@ This issue does not wire those variables into runtime code; it only reserves cle
 - [x] Success redirect target fixed at `https://playcozyblock.com/premium/success`
 - [x] Webhook target fixed at `https://playcozyblock.com/.netlify/functions/gumroad-webhook`
 - [x] Storefront copy documents the restore-code model
-- [x] Confirm the Gumroad `product_id` as `tjkti`
-- [ ] Run a checkout-path smoke test and record the observed redirect query parameters here
+- [x] Confirm the opaque Gumroad `product_id` as `EIMdnG5PO1Mswtbp0o8vUg==`
+- [x] Confirm the Gumroad permalink as `tjkti`
+- [x] Run a checkout-path smoke test and record the observed redirect query parameters here
 
 ## Current Endpoint Status
 
@@ -102,7 +117,9 @@ The current response is `404 Not Found`. That is expected until issue `#33` impl
 
 ## Smoke Test Notes
 
-When a safe checkout-path smoke test is run, add:
-- the exact redirect URL observed after purchase
-- the query parameter names returned by Gumroad
-- whether the redirect lands directly on `/premium/success`
+Safe checkout-path smoke test recorded on `2026-03-30`:
+- exact redirect URL observed after purchase:
+  `https://playcozyblock.com/premium/success?sale_id=9gT_oOaqbhTVw_9CHH-xJw%3D%3D&product_id=EIMdnG5PO1Mswtbp0o8vUg%3D%3D&product_permalink=tjkti`
+- query parameter names returned by Gumroad:
+  `sale_id`, `product_id`, `product_permalink`
+- redirect lands directly on `/premium/success`
