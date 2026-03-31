@@ -1,3 +1,4 @@
+import { LEVEL_ACCESS } from '../access';
 import bentRoute from './04-bent-route';
 import cornerSpin from './05-corner-spin';
 import crosswind from './07-crosswind';
@@ -21,6 +22,7 @@ const world2Levels = [
 export const WORLD_2_SET = {
   id: 'world-2',
   name: 'World 2',
+  access: LEVEL_ACCESS.PREMIUM,
   levels: world2Levels,
 };
 

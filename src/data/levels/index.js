@@ -1,4 +1,5 @@
 import { PIECE_LIBRARY } from '../pieces';
+export { LEVEL_ACCESS } from './access';
 import WORLD_0_SET from './world-0';
 import WORLD_1_SET from './world-1';
 import WORLD_2_SET from './world-2';
