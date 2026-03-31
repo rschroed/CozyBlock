@@ -39,7 +39,9 @@ This repo uses a lean GitHub issue and branch workflow.
 3. Make the change and verify it locally with `npm run build`.
 4. Open a PR back to `main`.
 5. Link the issue in the PR body and use a closing keyword such as `Closes #123`.
-6. Merge to `main` to trigger the GitHub Pages deploy.
+6. Merge to `main` to trigger the Netlify production deploy.
+
+Netlify deploys `main` to production and automatically creates preview deploys for pull requests.
 
 Direct pushes to `main` are not the default path and should be reserved for true emergencies.
 
