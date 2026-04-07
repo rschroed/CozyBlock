@@ -120,7 +120,32 @@ button {
   line-height: 1.2;
 }
 
+.music-toggle {
+  align-self: flex-start;
+  width: fit-content;
+  padding: 8px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: var(--panel-surface);
+  color: var(--text);
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.music-toggle:hover {
+  border-color: var(--accent);
+}
+
+.music-toggle.is-playing {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+}
+
 .puzzle-trigger:focus-visible,
+.music-toggle:focus-visible,
 .completion-next:focus-visible,
 .picker-header button:focus-visible,
 .picker-grid button:focus-visible,
