@@ -16,6 +16,10 @@ function getLevelWorldId(level) {
   return level.id.split('-').slice(0, 2).join('-');
 }
 
+function getWorldLevels(worldId) {
+  return LEVELS.filter((level) => getLevelWorldId(level) === worldId);
+}
+
 function getDistinctRotations(shape) {
   const rotations = [];
   const seen = new Set();
@@ -161,14 +165,26 @@ describe('level content validation', () => {
         ['world-0', LEVEL_ACCESS.FREE],
         ['world-1', LEVEL_ACCESS.FREE],
         ['world-2', LEVEL_ACCESS.PREMIUM],
+        ['world-3', LEVEL_ACCESS.PREMIUM],
+        ['world-4', LEVEL_ACCESS.PREMIUM],
+        ['world-5', LEVEL_ACCESS.PREMIUM],
+        ['world-6', LEVEL_ACCESS.PREMIUM],
+        ['world-7', LEVEL_ACCESS.PREMIUM],
+        ['world-8', LEVEL_ACCESS.PREMIUM],
       ]);
     });
 
-    it('ships the expected world counts for the first content wave', () => {
+    it('ships the expected world counts for the current content wave', () => {
       expect(LEVEL_SETS.map((set) => [set.id, set.levels.length])).toEqual([
         ['world-0', 1],
         ['world-1', 8],
         ['world-2', 8],
+        ['world-3', 8],
+        ['world-4', 8],
+        ['world-5', 8],
+        ['world-6', 8],
+        ['world-7', 8],
+        ['world-8', 8],
       ]);
     });
 
@@ -192,7 +208,7 @@ describe('level content validation', () => {
 
     it('makes world 2 require a rotated t4 placement', () => {
       const allowedPieces = [PIECE_IDS.SQUARE2, PIECE_IDS.LINE3, PIECE_IDS.L3, PIECE_IDS.T4];
-      const world2Levels = LEVELS.filter((level) => getLevelWorldId(level) === 'world-2');
+      const world2Levels = getWorldLevels('world-2');
 
       world2Levels.forEach((level) => {
         expect(level.pieceIds).toEqual(allowedPieces);
@@ -206,6 +222,83 @@ describe('level content validation', () => {
         });
 
         expect(allSolutionsRotateT4).toBe(true);
+      });
+    });
+
+    it('uses the world 2 piece set unchanged while world 3 stretches the boards', () => {
+      const allowedPieces = [PIECE_IDS.SQUARE2, PIECE_IDS.LINE3, PIECE_IDS.L3, PIECE_IDS.T4];
+      const world3Levels = getWorldLevels('world-3');
+
+      world3Levels.forEach((level) => {
+        expect(level.pieceIds).toEqual(allowedPieces);
+      });
+
+      world3Levels.slice(0, 4).forEach((level) => {
+        const maxDimension = Math.max(level.board.length, ...level.board.map((row) => row.length));
+        expect(maxDimension).toBeLessThanOrEqual(5);
+      });
+
+      world3Levels.slice(4).forEach((level) => {
+        const maxDimension = Math.max(level.board.length, ...level.board.map((row) => row.length));
+        expect(maxDimension).toBeGreaterThanOrEqual(5);
+      });
+
+      const stretchedLevels = world3Levels.filter(
+        (level) => Math.max(level.board.length, ...level.board.map((row) => row.length)) >= 6,
+      );
+      expect(stretchedLevels.length).toBeGreaterThan(0);
+    });
+
+    it('introduces line4 in world 4 and keeps the same set through world 5', () => {
+      const allowedPieces = [
+        PIECE_IDS.SQUARE2,
+        PIECE_IDS.LINE3,
+        PIECE_IDS.L3,
+        PIECE_IDS.T4,
+        PIECE_IDS.LINE4,
+      ];
+
+      ['world-4', 'world-5'].forEach((worldId) => {
+        getWorldLevels(worldId).forEach((level) => {
+          expect(level.pieceIds).toEqual(allowedPieces);
+        });
+      });
+    });
+
+    it('introduces z4 in world 6 and keeps the same set through world 7', () => {
+      const allowedPieces = [
+        PIECE_IDS.SQUARE2,
+        PIECE_IDS.LINE3,
+        PIECE_IDS.L3,
+        PIECE_IDS.T4,
+        PIECE_IDS.LINE4,
+        PIECE_IDS.Z4,
+      ];
+
+      ['world-6', 'world-7'].forEach((worldId) => {
+        getWorldLevels(worldId).forEach((level) => {
+          expect(level.pieceIds).toEqual(allowedPieces);
+        });
+      });
+    });
+
+    it('introduces s4 in world 8 for denser layouts', () => {
+      const allowedPieces = [
+        PIECE_IDS.SQUARE2,
+        PIECE_IDS.LINE3,
+        PIECE_IDS.L3,
+        PIECE_IDS.T4,
+        PIECE_IDS.LINE4,
+        PIECE_IDS.Z4,
+        PIECE_IDS.S4,
+      ];
+      const world8Levels = getWorldLevels('world-8');
+
+      world8Levels.forEach((level) => {
+        expect(level.pieceIds).toEqual(allowedPieces);
+        const boardArea = countPlayableCells(level.board);
+        const boxArea = level.board.length * Math.max(...level.board.map((row) => row.length));
+        expect(boardArea / boxArea).toBeGreaterThanOrEqual(0.6);
       });
     });
   });
