@@ -30,6 +30,24 @@ describe('level navigation helpers', () => {
         localLevelCount: 8,
         hasPreviousLevelInSet: false,
       });
+
+      expect(getLevelNavigation(17)).toMatchObject({
+        setId: 'world-3',
+        setName: 'World 3',
+        localLevelIndex: 0,
+        localLevelNumber: 1,
+        localLevelCount: 8,
+        hasPreviousLevelInSet: false,
+      });
+
+      expect(getLevelNavigation(57)).toMatchObject({
+        setId: 'world-8',
+        setName: 'World 8',
+        localLevelIndex: 0,
+        localLevelNumber: 1,
+        localLevelCount: 8,
+        hasPreviousLevelInSet: false,
+      });
     });
 
     it('reports the correct metadata for a middle level within a set', () => {
@@ -60,8 +78,8 @@ describe('level navigation helpers', () => {
     });
 
     it('reports no next set at the last level of the final set', () => {
-      expect(getLevelNavigation(16)).toMatchObject({
-        setId: 'world-2',
+      expect(getLevelNavigation(64)).toMatchObject({
+        setId: 'world-8',
         localLevelNumber: 8,
         localLevelCount: 8,
         hasNextLevelInSet: false,
@@ -103,6 +121,54 @@ describe('level navigation helpers', () => {
           levels: [
             { levelIndex: 9, localLevelNumber: 1 },
             { levelIndex: 10, localLevelNumber: 2 },
+          ],
+        },
+        {
+          setId: 'world-3',
+          startLevelIndex: 17,
+          levels: [
+            { levelIndex: 17, localLevelNumber: 1 },
+            { levelIndex: 18, localLevelNumber: 2 },
+          ],
+        },
+        {
+          setId: 'world-4',
+          startLevelIndex: 25,
+          levels: [
+            { levelIndex: 25, localLevelNumber: 1 },
+            { levelIndex: 26, localLevelNumber: 2 },
+          ],
+        },
+        {
+          setId: 'world-5',
+          startLevelIndex: 33,
+          levels: [
+            { levelIndex: 33, localLevelNumber: 1 },
+            { levelIndex: 34, localLevelNumber: 2 },
+          ],
+        },
+        {
+          setId: 'world-6',
+          startLevelIndex: 41,
+          levels: [
+            { levelIndex: 41, localLevelNumber: 1 },
+            { levelIndex: 42, localLevelNumber: 2 },
+          ],
+        },
+        {
+          setId: 'world-7',
+          startLevelIndex: 49,
+          levels: [
+            { levelIndex: 49, localLevelNumber: 1 },
+            { levelIndex: 50, localLevelNumber: 2 },
+          ],
+        },
+        {
+          setId: 'world-8',
+          startLevelIndex: 57,
+          levels: [
+            { levelIndex: 57, localLevelNumber: 1 },
+            { levelIndex: 58, localLevelNumber: 2 },
           ],
         },
       ]);
