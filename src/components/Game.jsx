@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import backgroundMusicSrc from '../assets/audio/background-music.m4a';
 import { createLevelPieceInstances, LEVELS } from '../data/levels';
 import { getLevelNavigation, getLevelPickerSections } from '../data/levels/navigation';
 import {
@@ -14,12 +15,14 @@ import Piece from './Piece';
 const DESKTOP_CELL_SIZE = 52;
 const CARD_MAX_WIDTH = 392;
 const BOARD_HORIZONTAL_PADDING = 56;
+const DEFAULT_MUSIC_VOLUME = 0.24;
 
 function createInitialTrayRotations(levelPieces) {
   return Object.fromEntries(levelPieces.map((piece) => [piece.id, 0]));
 }
 
 function Game() {
+  const audioRef = useRef(null);
   const boardRef = useRef(null);
   const trayRef = useRef(null);
   const dragStateRef = useRef(null);
@@ -30,6 +33,8 @@ function Game() {
     Object.fromEntries(createLevelPieceInstances(LEVELS[0]).map((piece) => [piece.id, piece])),
   );
   const cellSizeRef = useRef(DESKTOP_CELL_SIZE);
+  const hasAttemptedMusicStartRef = useRef(false);
+  const isMusicEnabledRef = useRef(true);
   const [levelIndex, setLevelIndex] = useState(0);
   const [placedPieces, setPlacedPieces] = useState({});
   const [trayRotations, setTrayRotations] = useState(
@@ -41,6 +46,9 @@ function Game() {
   const [viewportWidth, setViewportWidth] = useState(
     typeof window === 'undefined' ? 1024 : window.innerWidth,
   );
+  const [isMusicEnabled, setIsMusicEnabled] = useState(true);
+  const [hasAttemptedMusicStart, setHasAttemptedMusicStart] = useState(false);
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const currentLevel = LEVELS[levelIndex];
   const navigation = useMemo(() => getLevelNavigation(levelIndex), [levelIndex]);
   const pickerSections = useMemo(() => getLevelPickerSections(), []);
@@ -80,6 +88,35 @@ function Game() {
   useEffect(() => {
     cellSizeRef.current = cellSize;
   }, [cellSize]);
+
+  useEffect(() => {
+    isMusicEnabledRef.current = isMusicEnabled;
+  }, [isMusicEnabled]);
+
+  useEffect(() => {
+    hasAttemptedMusicStartRef.current = hasAttemptedMusicStart;
+  }, [hasAttemptedMusicStart]);
+
+  useEffect(() => {
+    const audio = new Audio(backgroundMusicSrc);
+    audio.loop = true;
+    audio.volume = DEFAULT_MUSIC_VOLUME;
+    audio.preload = 'auto';
+
+    const handlePlay = () => setIsMusicPlaying(true);
+    const handlePause = () => setIsMusicPlaying(false);
+
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+    audioRef.current = audio;
+
+    return () => {
+      audio.pause();
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audioRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -136,6 +173,40 @@ function Game() {
   const updateDragState = (nextState) => {
     dragStateRef.current = nextState;
     setDragState(nextState);
+  };
+
+  const markMusicStartAttempted = () => {
+    if (hasAttemptedMusicStartRef.current) {
+      return false;
+    }
+
+    hasAttemptedMusicStartRef.current = true;
+    setHasAttemptedMusicStart(true);
+    return true;
+  };
+
+  const playMusic = async () => {
+    const audio = audioRef.current;
+    if (!audio || !isMusicEnabledRef.current) {
+      return false;
+    }
+
+    try {
+      await audio.play();
+      return true;
+    } catch {
+      setIsMusicPlaying(!audio.paused);
+      return false;
+    }
+  };
+
+  const pauseMusic = () => {
+    const audio = audioRef.current;
+    if (!audio) {
+      return;
+    }
+
+    audio.pause();
   };
 
   const isPointerInsideRect = (pointer, element) => {
@@ -298,11 +369,59 @@ function Game() {
     resetLevelState();
   };
 
+  const handleMusicToggle = async () => {
+    const audio = audioRef.current;
+    if (!audio) {
+      return;
+    }
+
+    if (audio.paused) {
+      markMusicStartAttempted();
+      if (!isMusicEnabledRef.current) {
+        isMusicEnabledRef.current = true;
+        setIsMusicEnabled(true);
+      }
+
+      await playMusic();
+      return;
+    }
+
+    isMusicEnabledRef.current = false;
+    setIsMusicEnabled(false);
+    pauseMusic();
+  };
+
   const goToLevel = (nextIndex) => {
     resetLevelState(LEVELS[nextIndex]);
     setLevelIndex(nextIndex);
     setIsLevelPickerOpen(false);
   };
+
+  useEffect(() => {
+    const isMusicToggleTarget = (target) =>
+      target instanceof Element && target.closest('.music-toggle');
+
+    const handleFirstInteraction = (event) => {
+      if (hasAttemptedMusicStartRef.current || isMusicToggleTarget(event.target)) {
+        return;
+      }
+
+      markMusicStartAttempted();
+      if (!isMusicEnabledRef.current) {
+        return;
+      }
+
+      void playMusic();
+    };
+
+    window.addEventListener('pointerdown', handleFirstInteraction, { passive: true });
+    window.addEventListener('keydown', handleFirstInteraction);
+
+    return () => {
+      window.removeEventListener('pointerdown', handleFirstInteraction);
+      window.removeEventListener('keydown', handleFirstInteraction);
+    };
+  }, []);
 
   useEffect(() => {
     const handlePointerMove = (event) => {
@@ -369,6 +488,7 @@ function Game() {
   const hasAnyPlacedPieces = Object.keys(placedPieces).length > 0;
   const hasNextPuzzle = navigation?.nextLevelIndex !== null;
   const isRotateActive = Boolean(selectedPieceId || dragState?.pieceId) && !isComplete;
+  const musicToggleLabel = isMusicPlaying ? 'Music Off' : 'Music On';
 
   const trayPieces = currentLevelPieces.filter(
     (piece) => !placedPieces[piece.id] && dragState?.pieceId !== piece.id,
@@ -385,6 +505,17 @@ function Game() {
               <span className="puzzle-trigger-level">
                 Puzzle {navigation.localLevelNumber} of {navigation.localLevelCount}: {currentLevel.name}
               </span>
+            </button>
+            <button
+              aria-label={isMusicPlaying ? 'Pause background music' : 'Play background music'}
+              aria-pressed={isMusicPlaying}
+              className={`music-toggle ${isMusicPlaying ? 'is-playing' : ''}`.trim()}
+              onClick={() => {
+                void handleMusicToggle();
+              }}
+              type="button"
+            >
+              {musicToggleLabel}
             </button>
           </div>
 
